@@ -193,30 +193,30 @@ static void print_map(int draw_interssections){
 
     if(draw_interssections){
         for(int i = i0; i < irange; i+=1){
-            printf("%i- |", idigit_len, i);
+            fprintf(output, "%*i- |", idigit_len, i);
             for(int j = j0; j < jrange; j+=1){
                 for(int i = (jdigit_len / 2) + 1; i; i-=1)
-                    putchar(' ');
+                    putc(' ', output);
                 int interssections = 0;
                 for(int k = 0; k < layers; k+=1){
                     interssections += (map[k][i * mapw + j] != 0);
                 }
                 if(interssections > 9){
-                    putchar('!');
+                    putc('!', output);
                 }
                 else if(interssections > 0){
-                    putchar('0' + interssections);
+                    putc('0' + interssections, output);
                 }
                 else{
-                    putchar(' ');
+                    putc(' ', output);
                 }
             }
-            putchar('\n');
+            putc('\n', output);
         }
     }
     else{
         for(int i = i0; i < irange; i+=1){
-            fprintf(output, "%i- |", idigit_len, i);
+            fprintf(output, "%*i- |", idigit_len, i);
             for(int j = j0; j < jrange; j+=1){
                 for(int i = (jdigit_len / 2) + 1; i; i-=1)
                     putc(' ', output);

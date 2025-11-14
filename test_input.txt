@@ -1,0 +1,31 @@
+
+new 10 10
+save dummymap.txt
+load dummymap.txt
+save
+load
+
+holds 1
+hold  2
+pencil 2 2
+place 1 1
+newlayer
+newlayer
+dellayer 1
+move 1 1
+
+newlayer
+pattern x0y0 n5 m5 h3 10lsds
+swaplayers 1 2
+layer 0
+copy 3 3
+paste 5 5
+
+show
+symswap 3 E
+
+help
+help exit
+show mapf
+save
+exit

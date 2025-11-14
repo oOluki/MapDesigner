@@ -1,0 +1,370 @@
+[2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> >>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> >>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> >>> >>> >>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |     2  2                     
+ 2- |     2  2                     
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |                              
+ 1- |                              
+ 2- |                              
+ 3- |                              
+ 4- |                              
+ 5- |                              
+ 6- |                              
+ 7- |                              
+ 8- |                              
+ 9- |                              
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  3  3  3  3  3               
+ 1- |  3  3  3  3  3               
+ 2- |  3  3  3  3  3  3  3         
+ 3- |  3  3  3  3  3  3  3         
+ 4- |  3  3  3  3  3  3  3  3  3   
+ 5- |        3  3  3  3  3  3  3   
+ 6- |        3  3  3  3  3  3  3  3
+ 7- |              3  3  3  3  3  3
+ 8- |              3  3  3  3  3  3
+ 9- |                    3  3  3  3
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  3  3  3  3  3               
+ 1- |  3  3  3  3  3               
+ 2- |  3  3  3  3  3  3  3         
+ 3- |  3  3  3  3  3  3  3         
+ 4- |  3  3  3  3  3  3  3  3  3   
+ 5- |        3  3  3  3  3  3  3   
+ 6- |        3  3  3  3  3  3  3  3
+ 7- |              3  3  3  3  3  3
+ 8- |              3  3  3  3  3  3
+ 9- |                    3  3  3  3
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  3  3  3  3  3               
+ 1- |  3  3  3  3  3               
+ 2- |  3  3  3  3  3  3  3         
+ 3- |  3  3  3  3  3  3  3         
+ 4- |  3  3  3  3  3  3  3  3  3   
+ 5- |        3  3  3  3  3  3  3   
+ 6- |        3  3  3  3  3  3  3  3
+ 7- |              3  3  3  3  3  3
+ 8- |              3  3  3  3  3  3
+ 9- |                    3  3  3  3
+>>> >>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  3  3  3  3  3               
+ 1- |  3  3  3  3  3               
+ 2- |  3  3  3  3  3  3  3         
+ 3- |  3  3  3  3  3  3  3         
+ 4- |  3  3  3  3  3  3  3  3  3   
+ 5- |        3  3  3  3  3  3  3   
+ 6- |        3  3  3  3  3  3  3  3
+ 7- |              3  3  3  3  3  3
+ 8- |              3  3  3  3  3  3
+ 9- |                    3  3  3  3
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  3  3  3  3  3               
+ 1- |  3  3  3  3  3               
+ 2- |  3  3  3  3  3  3  3         
+ 3- |  3  3  3  3  3  3  3         
+ 4- |  3  3  3  3  3  3  3  3  3   
+ 5- |        3  3  3  3  3  3  3   
+ 6- |        3  3  3  3  3  3  3  3
+ 7- |              3  3  3  3  3  3
+ 8- |              3  3  3  3  3  3
+ 9- |                    3  3  3  3
+>>> [2J[H
+map: dummymap.txt
+map size: (10, 10)
+layer: 0 / 2
+camera: (-15, -11, 32, 24)
+pencil: (5, 5)
+copy selection: (3, 3, 5, 5)
+held tile: 3 -> 3
+cursor: (20, 20)
+output: stdout
+tilesheet = (null)
+tilew = 0, tileh = 0
+ascii: @#Xx%*+=~-:. 
+draw mode: character
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  E  E  E  E  E               
+ 1- |  E  E  E  E  E               
+ 2- |  E  E  E  E  E  E  E         
+ 3- |  E  E  E  E  E  E  E         
+ 4- |  E  E  E  E  E  E  E  E  E   
+ 5- |        E  E  E  E  E  E  E   
+ 6- |        E  E  E  E  E  E  E  E
+ 7- |              E  E  E  E  E  E
+ 8- |              E  E  E  E  E  E
+ 9- |                    E  E  E  E
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  E  E  E  E  E               
+ 1- |  E  E  E  E  E               
+ 2- |  E  E  E  E  E  E  E         
+ 3- |  E  E  E  E  E  E  E         
+ 4- |  E  E  E  E  E  E  E  E  E   
+ 5- |        E  E  E  E  E  E  E   
+ 6- |        E  E  E  E  E  E  E  E
+ 7- |              E  E  E  E  E  E
+ 8- |              E  E  E  E  E  E
+ 9- |                    E  E  E  E
+>>> [2J[H
+exit: quits the aplication, quit, e and q are equivalent to this
+hold <tile>: holds given tile
+holds <symbol>: holds the tile with given symbol
+place <x> <y>: places a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
+pencil <w> <h>: sets the width and height of the square for tile placement/copying
+move <x> <y>: moves camera to (x, y), mv is equivalent to this
+zoom <w> <h>: sets the camera's width and height
+symswap <tile> <new>: sets the new symbol for displaing a tile, expects an uint number as the tile and a character as its new palette symbol
+copy <x> <y>: sets the position of the rect used to take a copy of a selection, width and height are given by pencil, cp is equivalent to this
+paste <x> <x>: pastes a copied selection to (x, y), also check copy
+check <x> <y>: does a complete check for tile at (x, y), expects 2 uint numbers, x and y coordinates to check
+new <w> <h>: creates a new map with (w, h) dimensions
+newlayer : creates a new layer
+dellayer <optional: layers>...: deletes given layers, or current layer if none are passed, expects n uint arguments, the layers to delete, or nothing to delete current layer
+swaplayers <layer1> <layer2> : swaps layer1 and layer2, expects 2 uint arguments, the layers to swap
+layer <layer>: selects given layer, expects 1 uint argument, the layer to go to
+show <optional: what>... -<optional: flags>...: shows parameters, map, tiles and configurations
+    use <what>:    map: to show the map's configuration and display map in single character mode
+    mapf: to display map with all layers, in the single character mode the number of interssections will be displayed per each tile
+    layer: to show layer's configuration
+    camera: to show the camera's configuration
+    pencil: to show the pencil's configuration
+    copy: to show the copy selection
+    tile: to show the held tile
+    tilesheet: to check the tile sheet configuration
+    tileset: to show all tile symbols available
+    mode: to show the draw mode, ascii sequence and output file path
+    -flags can be:
+        t <tile number>: displays tile with tile number
+        s <tile symbol>: displays tile with tile symbol
+        skip_question: skip questions about wether you want to draw things, etc
+        dont_skip_question: dont skip questions about wether you want to draw things, etc
+pattern <patterns>...: each pattern is a space sepparated word where each character or character sequence performs a function
+    -characters ands sequences are:
+        x<uint_number>: sets cursor x position
+        y<uint_number>: sets cursor y position
+        n<uint_number>: sets pencil's height position
+        m<uint_number>: sets pencil's width position
+        h<uint_number>: hold tile with given number
+        w: moves up
+        a: moves left
+        s: moves down
+        d: moves right
+        b: goes to previous layer (as in goes (b)ack)
+        f: goes to next layer (as in goes (f)orward)
+        p: place tiles
+        i: places tiles and moves up
+        j: places tiles and moves left
+        k: places tiles and moves down
+        l: places tiles and moves right
+    -number preffixes can be used to tell how many times that pattern should repeat
+        example: h12 10il wd x12 y13 n1 m1 3bpddsfn2m2h3p
+save <optional: path>: saves the map
+	you can pass the path to the output save file, otherwise the map will be saved to the last loaded map or map.bin if no map was loaded
+	you can choose the .png extension to save the map as a png file, but for that the map needs to have less than 5 layers
+load <optional: path>: loads a map, you can pass the path to the input file, otherwise the map will be reloaded to the last loaded map
+help <optional: what>: displays this help message or, if provided, a help message about <what>
+>>> [2J[H
+exit: quits the aplication, quit, e and q are equivalent to this
+>>> [2J[H
+       0  1  2  3  4  5  6  7  8  9
+       |  |  |  |  |  |  |  |  |  |
+     ______________________________
+ 0- |  1  1  1  1  1               
+ 1- |  1  2  2  1  1               
+ 2- |  1  2  2  1  1  1  1         
+ 3- |  1  1  1  1  1  1  1         
+ 4- |  1  1  1  1  1  1  1  1  1   
+ 5- |        1  1  1  1  1  1  1   
+ 6- |        1  1  1  1  1  1  1  1
+ 7- |              1  1  1  1  1  1
+ 8- |              1  1  1  1  1  1
+ 9- |                    1  1  1  1
+map: dummymap.txt    mapw = 10    maph = 10
+>>> >>> 

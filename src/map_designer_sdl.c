@@ -745,7 +745,7 @@ int handle_events(){
         }
     }
     
-
+    return 0;
 }
 
 void map_designer_close(){
@@ -880,10 +880,10 @@ int main(){
             }
                 break;
             case CONTEXT_MAP:{
-                if(scrollx < 0) scrollx = 0;
-                if(scrollx + cameraw > mapw * tilew) scrollx = mapw * tilew - cameraw;
-                if(scrolly < 0) scrolly = 0;
-                if(scrolly + camerah > maph * tileh) scrolly = maph * tileh - camerah;
+                if(scrollx < 0) scrollx = 0.0f;
+                if(scrollx + cameraw > mapw * tilew) scrollx = (float) (mapw * tilew - cameraw);
+                if(scrolly < 0) scrolly = 0.0f;
+                if(scrolly + camerah > maph * tileh) scrolly = (float) (maph * tileh - camerah);
                 
                 camerax = (int) scrollx;
                 cameray = (int) scrolly;

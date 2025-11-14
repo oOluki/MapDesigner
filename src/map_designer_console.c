@@ -145,7 +145,91 @@ int getascii_color_index(uint32_t color){
     return (brightness <= 255)? (brightness * (ascii_len - 1)) / 255 : (ascii_len - 1);
 }
 
-static void print_map();
+static void print_map(int draw_interssections){
+
+    if(output == stdout) printf("\x1B[2J\x1B[H\n");
+    else{
+        if(output) fclose(output);
+        output = NULL;
+        output = fopen(output_path, "w");
+        if(!output){
+            fprintf(stderr, "[ERROR] could not open output '%s', switching back to stdout\n", output_path);
+            output = stdout;
+        }
+    }
+
+    const int i0 = (cameray < 0)? 0 : cameray;
+    const int j0 = (camerax < 0)? 0 : camerax;
+    const int irange = (cameray + camerah < maph)? cameray + camerah : maph;
+    const int jrange = (camerax + cameraw < mapw)? camerax + cameraw : mapw;
+
+    int idigit_len = 1;
+    for(int _10n = 10; (int) (irange / _10n); _10n *= 10) idigit_len+=1;
+
+    int jdigit_len = 1;
+    for(int _10n = 10; (int) (jrange / _10n); _10n *= 10) jdigit_len+=1;
+
+    for(int i = 0; i < idigit_len + 3; i+=1)
+        putc(' ', output);
+
+    for(int j = j0; j < jrange; j+=1)
+        fprintf(output, "%*i", jdigit_len + 1, j);
+    putc('\n', output);
+    for(int i = 0; i < idigit_len + 3; i+=1)
+        putc(' ', output);
+    for(int j = j0; j < jrange; j+=1){
+        for(int i = (jdigit_len / 2) + 1; i; i-=1)
+            putc(' ', output);
+        putc('|', output);
+    }
+    putc('\n', output);
+    for(int i = 0; i < idigit_len + 3; i+=1)
+        putc(' ', output);
+    for(int j = j0; j < jrange; j+=1)
+        for(int i = 0; i < (jdigit_len + 1); i+=1)
+            putc('_', output);
+
+    putc('\n', output);
+
+    if(draw_interssections){
+        for(int i = i0; i < irange; i+=1){
+            printf("%i- |", idigit_len, i);
+            for(int j = j0; j < jrange; j+=1){
+                for(int i = (jdigit_len / 2) + 1; i; i-=1)
+                    putchar(' ');
+                int interssections = 0;
+                for(int k = 0; k < layers; k+=1){
+                    interssections += (map[k][i * mapw + j] != 0);
+                }
+                if(interssections > 9){
+                    putchar('!');
+                }
+                else if(interssections > 0){
+                    putchar('0' + interssections);
+                }
+                else{
+                    putchar(' ');
+                }
+            }
+            putchar('\n');
+        }
+    }
+    else{
+        for(int i = i0; i < irange; i+=1){
+            fprintf(output, "%i- |", idigit_len, i);
+            for(int j = j0; j < jrange; j+=1){
+                for(int i = (jdigit_len / 2) + 1; i; i-=1)
+                    putc(' ', output);
+                putc(
+                    (map[current_layer][i * mapw + j] < palette_len && map[current_layer][i * mapw + j] >= 0)?
+                        (int) palette[map[current_layer][i * mapw + j]] : '~', output
+                );
+            }
+            putc('\n', output);
+        }
+    }
+
+}
 
 
 static inline uint32_t blend_color_channel(const uint32_t ct, const uint32_t at, const uint32_t cb){
@@ -298,92 +382,6 @@ static void render_graphical(int draw_all_layers){
 
 
     free(pixels);
-}
-
-static void print_map(int draw_interssections){
-
-    if(output == stdout) printf("\x1B[2J\x1B[H\n");
-    else{
-        if(output) fclose(output);
-        output = NULL;
-        output = fopen(output_path, "w");
-        if(!output){
-            fprintf(stderr, "[ERROR] could not open output '%s', switching back to stdout\n", output_path);
-            output = stdout;
-        }
-    }
-
-    const int i0 = (cameray < 0)? 0 : cameray;
-    const int j0 = (camerax < 0)? 0 : camerax;
-    const int irange = (cameray + camerah < maph)? cameray + camerah : maph;
-    const int jrange = (camerax + cameraw < mapw)? camerax + cameraw : mapw;
-
-    int idigit_len = 1;
-    for(int _10n = 10; (int) (irange / _10n); _10n *= 10) idigit_len+=1;
-
-    int jdigit_len = 1;
-    for(int _10n = 10; (int) (jrange / _10n); _10n *= 10) jdigit_len+=1;
-
-    for(int i = 0; i < idigit_len + 3; i+=1)
-        putc(' ', output);
-
-    for(int j = j0; j < jrange; j+=1)
-        fprintf(output, "%*i", jdigit_len + 1, j);
-    putc('\n', output);
-    for(int i = 0; i < idigit_len + 3; i+=1)
-        putc(' ', output);
-    for(int j = j0; j < jrange; j+=1){
-        for(int i = (jdigit_len / 2) + 1; i; i-=1)
-            putc(' ', output);
-        putc('|', output);
-    }
-    putc('\n', output);
-    for(int i = 0; i < idigit_len + 3; i+=1)
-        putc(' ', output);
-    for(int j = j0; j < jrange; j+=1)
-        for(int i = 0; i < (jdigit_len + 1); i+=1)
-            putc('_', output);
-
-    putc('\n', output);
-
-    if(draw_interssections){
-        for(int i = i0; i < irange; i+=1){
-            printf("%*i- |", idigit_len, i);
-            for(int j = j0; j < jrange; j+=1){
-                for(int i = (jdigit_len / 2) + 1; i; i-=1)
-                    putchar(' ');
-                int interssections = 0;
-                for(int k = 0; k < layers; k+=1){
-                    interssections += (map[k][i * mapw + j] != 0);
-                }
-                if(interssections > 9){
-                    putchar('!');
-                }
-                else if(interssections > 0){
-                    putchar('0' + interssections);
-                }
-                else{
-                    putchar(' ');
-                }
-            }
-            putchar('\n');
-        }
-    }
-    else{
-        for(int i = i0; i < irange; i+=1){
-            fprintf(output, "%*i- |", idigit_len, i);
-            for(int j = j0; j < jrange; j+=1){
-                for(int i = (jdigit_len / 2) + 1; i; i-=1)
-                    putc(' ', output);
-                putc(
-                    (map[current_layer][i * mapw + j] < palette_len && map[current_layer][i * mapw + j] >= 0)?
-                        (int) palette[map[current_layer][i * mapw + j]] : '~', output
-                );
-            }
-            putc('\n', output);
-        }
-    }
-
 }
 
 // \returns the size of the word

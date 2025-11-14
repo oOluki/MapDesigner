@@ -29,6 +29,14 @@ SOFTWARE.
 
 #include "map_designer.h"
 
+
+#ifdef _WIN32
+
+#define SDL_MAIN_HANDLED
+
+#endif
+
+
 #include <SDL2/SDL.h>
 
 #include <stdarg.h>
@@ -574,13 +582,13 @@ void handle_keydown(SDL_Keycode key){
     case SDLK_s:
         scrolly += 1;
         if(scrolly + camerah >= maph * tileh){
-            scrolly = maph * tileh - camerah;
+            scrolly = (float) (maph * tileh - camerah);
         }
         break;
     case SDLK_d:
         scrollx += 1;
         if(scrollx + cameraw >= mapw * tilew){
-            scrollx = mapw * tilew - cameraw;
+            scrollx = (float) (mapw * tilew - cameraw);
         }
         break;
 

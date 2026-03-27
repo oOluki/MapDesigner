@@ -477,12 +477,12 @@ void help(int what){
         break;
     case INST_PATTERN:
         printf(
-            "pattern <patterns>...: each pattern is a space sepparated word where each character or character sequence performs a function\n"
+            "pattern <patterns>...: each pattern is a space sepparated phrase where each character or character sequence (word) performs a function\n"
             "    -characters ands sequences are:\n"
             "        x<uint_number>: sets cursor x position\n"
             "        y<uint_number>: sets cursor y position\n"
-            "        n<uint_number>: sets pencil's height position\n"
-            "        m<uint_number>: sets pencil's width position\n"
+            "        n<uint_number>: sets pencil's height\n"
+            "        m<uint_number>: sets pencil's width\n"
             "        h<uint_number>: hold tile with given number\n"
             "        w: moves up\n"
             "        a: moves left\n"
@@ -1339,7 +1339,7 @@ int main(int argc, char** argv){
                 "\tw <map width>: sets the map width\n"
                 "\th <map_height>: sets the map height\n"
                 "\tl <layers>: sets the number of layers\n"
-                "\tsingle_character_graphics: displays map with tiles represented by single characters"
+                "\tsingle_character_graphics: displays map with tiles represented by single characters\n"
                 "\tcommon_graphics: display map with tiles represented by graphical form (tilesheet required)\n"
                 "\ttw: sets the tileset's tile width\n"
                 "\tth: sets the tileset's tile height"

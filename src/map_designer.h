@@ -88,31 +88,63 @@ static inline int Mstrlen(const char* str){
     return len;
 }
 
-static inline int fexpect(FILE* f, const char* expected, int* first_last){
+static inline int fexpect(FILE* f, const char* expected, int* first_last, int* column, int* row){
     int c = *first_last;
-    for(; *expected && c == *expected; c = fgetc(f)) expected+=1;
+
+    // setting dummy values, if necessary
+    if(!column) column = &c;
+    if(!row)    row    = &c;
+
+    for(; *expected && c == *expected; c = fgetc(f)){
+        expected+=1;
+        const int cond = c == '\n';
+        *column = cond? 1 : *column + 1;
+        *row    += cond;
+    }
     *first_last = c;
     return *expected == '\0';
 }
 
-static inline int fparse_uint(FILE* f, int* first_last){
+static inline int fparse_uint(FILE* f, int* first_last, int* column){
     int output = 0;
     int c = *first_last;
+
+    // setting dummy values, if necessary
+    if(!column) column = &c;
+
     if(c < '0' || c > '9') return -1;
     for(; c >= '0' && c <= '9'; c = fgetc(f)){
         output = (output * 10) + (c - '0');
+        *column += 1;
     }
     *first_last = c;
     return output;
 }
 
-int load_map(const char* path){
+static inline void fskip(FILE* f, int* first_last, int* column, int* row){
+    int c = *first_last;
 
+    // setting dummy values, if necessary
+    if(!column) column = &c;
+
+    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f)){
+        const int cond = c == '\n';
+        *column = cond? 1 : *column + 1;
+        *row    += cond;
+    }
+    *first_last = c;
+}
+
+int load_map(const char* path){
+    #define __ERROR(MSG, ...) do { fprintf(stderr, "[ERROR] %s:%i:%i: " MSG "\n", path, row, column, __VA_ARGS__); } while(0)
     if(!path){
         fprintf(stderr, "[ERROR] missing path, required for first load\n");
     }
 
     FILE* f = fopen(path, "r");
+
+    int column = 1;
+    int row = 1;
 
     int err = 0;
 
@@ -123,16 +155,16 @@ int load_map(const char* path){
 
     int c = fgetc(f);
 
-    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
+    fskip(f, &c, &column, &row);
 
-    if(0 == fexpect(f, "map:", &c)){
+    if(0 == fexpect(f, "map:", &c, &column, &row)){
         fclose(f);
         int w;
         int h;
         int comp;
         stbi_uc* pixels = stbi_load(path, &w, &h, &comp, 0);
         if(!pixels){
-            fprintf(stderr, "expected 'map:' identifier\n");
+            __ERROR("expected 'map:' identifier%c", ' ');
             return 1;
         }
         if(map){
@@ -154,77 +186,77 @@ int load_map(const char* path){
         return 0;
     }
 
-    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
+    fskip(f, &c, &column, &row);
     
-    if(0 == fexpect(f, "width:", &c)){
+    if(0 == fexpect(f, "width:", &c, &column, &row)){
         err = 1;
-        fprintf(stderr, "[ERROR] expected 'width:' identifier\n");
+        __ERROR("expected 'width:' identifier%c", ' ');
         goto defer;
     }
-    for(; c == ' ' || c == '\t'; c = fgetc(f));
+    for(; c == ' ' || c == '\t'; c = fgetc(f)) column += 1;
 
-    const int width = fparse_uint(f, &c);
+    const int width = fparse_uint(f, &c, &column);
     if(width <= 0){
-        fprintf(stderr, "[ERROR] invalid width\n");
+        __ERROR("invalid width%c", ' ');
         err = 1;
         goto defer;
     }
-    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
-    if(!fexpect(f, "height:", &c)){
-        fprintf(f, "[ERROR] expected 'height:' identifier\n");
+    fskip(f, &c, &column, &row);
+    if(!fexpect(f, "height:", &c, &column, &row)){
+        __ERROR("expected 'height:' identifier%c", ' ');
         err = 1;
         goto defer;
     }
-    for(; c == ' ' || c == '\t'; c = fgetc(f));
+    for(; c == ' ' || c == '\t'; c = fgetc(f)) column += 1;
 
-    const int height = fparse_uint(f, &c);
+    const int height = fparse_uint(f, &c, &column);
     if(height <= 0){
-        fprintf(stderr, "[ERROR] invalid height\n");
+        __ERROR("invalid height%c", ' ');
         err = 1;
         goto defer;
     }
-    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
+    fskip(f, &c, &column, &row);
 
-    if(!fexpect(f, "layers:", &c)){
-        fprintf(f, "[ERROR] expected 'layers:' identifier\n");
+    if(!fexpect(f, "layers:", &c, &column, &row)){
+        __ERROR("expected 'layers:' identifier%c", ' ');
         err = 1;
         goto defer;
     }
-    for(; c == ' ' || c == '\t'; c = fgetc(f));
+    for(; c == ' ' || c == '\t'; c = fgetc(f)) column += 1;
 
-    const int lyr = fparse_uint(f, &c);
+    const int lyr = fparse_uint(f, &c, &column);
     if(lyr <= 0){
-        fprintf(stderr, "[ERROR] invalid layers\n");
+        __ERROR("invalid layer count%c", ' ');
         err = 1;
         goto defer;
     }
-    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
+    fskip(f, &c, &column, &row);
 
     const int _map_size = width * height;
     char** _map = malloc(lyr * sizeof(_map[0]));
     for(int k = 0; k < lyr; k +=1){
         _map[k] = malloc(_map_size);
         for(int i = 0; i < _map_size; i+=1){
-            for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
-            const int tile = fparse_uint(f, &c);
+            fskip(f, &c, &column, &row);
+            const int tile = fparse_uint(f, &c, &column);
             if(tile < 0){
-                fprintf(stderr, "[ERROR] invalid/missing tile identifier for (%i, %i) layer %i\n", i % width, (int) (i / width), k);
+                __ERROR("invalid/missing tile identifier for (%i, %i) layer %i", i % width, (int) (i / width), k);
                 for(int n = 0; n < k; n+=1) free(_map[n]);
                 free(_map);
                 err = 1;
                 goto defer;
             }
             if((char) (tile) != tile){
-                fprintf(stderr, "[ERROR] tile value overflow at (%i, %i) layer %i\n", i % width, (int) (i / width), k);
+                __ERROR("tile value overflow at (%i, %i) layer %i", i % width, (int) (i / width), k);
                 for(int n = 0; n < k; n+=1) free(_map[n]);
                 free(_map);
                 err = 1;
                 goto defer;
             }
             _map[k][i] = (char) tile;
-            for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
+            fskip(f, &c, &column, &row);
             if(c != ','){
-                fprintf(stderr, "[ERROR] expected ',' after tile at (%i, %i) layer %i\n", i % width, (int) (i / width), k);
+                __ERROR("expected ',' after tile at (%i, %i) layer %i", i % width, (int) (i / width), k);
                 for(int n = 0; n < k; n+=1) free(_map[n]);
                 free(_map);
                 err = 1;
@@ -233,15 +265,9 @@ int load_map(const char* path){
             c = fgetc(f);
         }
     }
-    for(; c == ' ' || c == '\t' || c == '\n'; c = fgetc(f));
+    fskip(f, &c, &column, &row);
     if(c != EOF){
-        fprintf(stderr, "[ERROR] Unexpected things at the end of file\n");
-        fputc('\'', stderr);
-        for(int i = 0; c != EOF && i < 10; i += 1){
-            fputc(c, stderr);
-            c = fgetc(f);
-        }
-        fprintf(stderr, "\'...\n");
+        __ERROR("Unexpected things at the end of file%c", ' ');
         for(int n = 0; n < lyr; n+=1) free(_map[n]);
         free(_map);
         err = 1;
@@ -267,6 +293,7 @@ int load_map(const char* path){
     defer:
     if(f) fclose(f);
     return err;
+    #undef __ERROR
 }
 
 

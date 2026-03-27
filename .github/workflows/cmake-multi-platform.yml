@@ -107,7 +107,13 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
     - name: Test
+      if: runner.os != 'Windows'
       working-directory: ${{ github.workspace }}
-      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: python test.py ${{ steps.strings.outputs.build-output-dir }}/MapDesignerConsole test_input.txt test_output.txt test_map.txt 
+      # perform tests in the test.py script
+      run: python test.py ${{ steps.strings.outputs.build-output-dir }}/MapDesignerConsole test_input.txt test_output.txt test_map.txt
+
+    - name: Test-Windows
+      if: runner.os == 'Windows'
+      working-directory: ${{ github.workspace }}
+      # perform tests in the test.py script
+      run: python test.py ${{ steps.strings.outputs.build-output-dir }}/Debug/MapDesignerConsole test_input.txt test_output.txt test_map.txt

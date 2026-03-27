@@ -329,8 +329,8 @@ pattern <patterns>...: each pattern is a space sepparated word where each charac
     -characters ands sequences are:
         x<uint_number>: sets cursor x position
         y<uint_number>: sets cursor y position
-        n<uint_number>: sets pencil's height position
-        m<uint_number>: sets pencil's width position
+        n<uint_number>: sets pencil's height
+        m<uint_number>: sets pencil's width
         h<uint_number>: hold tile with given number
         w: moves up
         a: moves left

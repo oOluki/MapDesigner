@@ -477,7 +477,7 @@ void help(int what){
         break;
     case INST_PATTERN:
         printf(
-            "pattern <patterns>...: each pattern is a space sepparated phrase where each character or character sequence (word) performs a function\n"
+            "pattern <patterns>...: each pattern is a space sepparated word where each character or character sequence performs a function\n"
             "    -characters ands sequences are:\n"
             "        x<uint_number>: sets cursor x position\n"
             "        y<uint_number>: sets cursor y position\n"

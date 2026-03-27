@@ -532,7 +532,7 @@ void help(int what){
         }
 
 int get_yes_or_no_asnwer(){
-    char c = 0;
+    int c = 0;
     for(c = fgetc(stdin); c == ' ' || c == '\t'; c = fgetc(stdin));
     const int answer = (c == 'y' || c == 'Y');
     for(c = fgetc(stdin); c != EOF && c != '\n'; c = fgetc(stdin));

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "map_designer.h"
+#include <stdio.h>
 
 
 #define BUFF_CAP 1024
@@ -65,38 +66,110 @@ static int cursory;
 
 static int active = 0;
 
-enum Instructions{
-    INST_NONE = 0,
-    INST_EXIT,
-    INST_HOLD,
-    INST_HOLDS,
-    INST_PLACE,
-    INST_PENCIL,
-    INST_MOVE,
-    INST_ZOOM,
-    INST_SYMSWAP,
-    INST_COPY,
-    INST_PASTE,
-    INST_CHECK,
-    INST_NEW,
-    INST_NEWLAYER,
-    INST_DELLAYER,
-    INST_SWAPLAYERS,
-    INST_LAYER,
-    INST_SHOW,
-    INST_PATTERN,
-    INST_SAVE,
-    INST_LOAD,
-    INST_HELP,
+enum Instructions {
+  INST_NONE = 0,
+  INST_EXIT,
+  INST_DISPLAY,  
+  INST_HOLD,
+  INST_HOLDS,
+  INST_PLACE,
+  INST_PENCIL,
+  INST_MOVE,
+  INST_ZOOM,
+  INST_SYMSWAP,
+  INST_COPY,
+  INST_PASTE,
+  INST_CHECK,
+  INST_NEW,
+  INST_NEWLAYER,
+  INST_DELLAYER,
+  INST_SWAPLAYERS,
+  INST_LAYER,
+  INST_SHOW,
+  INST_PATTERN,
+  INST_SAVE,
+  INST_LOAD,
+  INST_HELP,
 
-    // for counting purposes
-    INST_COUNT
+  // for counting purposes
+  INST_COUNT
 };
 
+static char single_char_cmd[INST_COUNT] = {
+    [INST_NONE] = '\'',
+    [INST_EXIT] = 'q',
+    [INST_DISPLAY] = ' ',
+    [INST_HOLD] = 'g',
+    [INST_HOLDS] = 'h',
+    [INST_PLACE] = 'p',
+    [INST_PENCIL] = '@',
+    [INST_MOVE] = 'm',
+    [INST_ZOOM] = 'z',
+    [INST_SYMSWAP] = '%',
+    [INST_COPY] = 'c',
+    [INST_PASTE] = '=',
+    [INST_CHECK] = '.',
+    [INST_NEW] = 'n',
+    [INST_NEWLAYER] = '+',
+    [INST_DELLAYER] = '-',
+    [INST_SWAPLAYERS] = '/',
+    [INST_LAYER] = 'l',
+    [INST_SHOW] = '!',
+    [INST_PATTERN] = ':',
+    [INST_SAVE] = 'v',
+    [INST_LOAD] = '^',
+    [INST_HELP] = '?'
+};
 
-int get_instruction(const char* what){
+static inline int cramp(int x, int max, int min) {
+	if (max < min) {
+		const int dummy = max;
+		max = min;
+		min = dummy;    
+	}  
+	if (x > max)
+	  x = max;
+	if (x < min)
+		x = min;
+	return x;  
+}
+
+int get_instruction(const char *what) {
+
+    if (!what) return INST_NONE;  
+  
     if(cmp_str(what, "exit") || cmp_str(what, "quit") || cmp_str(what, "q") || cmp_str(what, "e"))
-        return INST_EXIT;
+      return INST_EXIT;
+
+    if (!what[1]) {
+		switch (what[0]) {
+		case 'w':
+			if (cameray > 0)
+				cameray -= 1;
+			return INST_DISPLAY;
+		case 'a':
+			if (camerax > 0)
+				camerax -= 1;
+			return INST_DISPLAY;
+		case 's':
+			if (cameray + camerah < maph - 1)
+				cameray += 1;
+			return INST_DISPLAY;
+		case 'd':
+			if (camerax + cameraw < mapw - 1)
+				camerax += 1;
+			return INST_DISPLAY;                
+
+		default:
+			for (int i = 0; i < sizeof(single_char_cmd) / sizeof(single_char_cmd[0]); i += 1) {
+				if (single_char_cmd[i] == what[0])
+					return i;            
+			}
+			return INST_NONE;        
+        }
+	}
+
+    if(cmp_str(what, "display"))                        return INST_DISPLAY    ;
     if(cmp_str(what, "hold"))                           return INST_HOLD       ;
     if(cmp_str(what, "holds"))                          return INST_HOLDS      ;
     if(cmp_str(what, "place"))                          return INST_PLACE      ;
@@ -118,7 +191,7 @@ int get_instruction(const char* what){
     if(cmp_str(what, "load"))                           return INST_LOAD       ;
     if(cmp_str(what, "help"))                           return INST_HELP       ;
 
-    else return INST_NONE;
+    return INST_NONE;
 }
 
 
@@ -404,11 +477,15 @@ static int get_next_word(const char** output, const char* str){
 
 void help(int what){
 
+	printf("\n-");
     switch (what)
     {
     case INST_EXIT:
         printf("exit: quits the aplication, quit, e and q are equivalent to this\n");
         break;
+    case INST_DISPLAY:
+		printf("display: displays map\n");
+		break;
     case INST_HOLD:
         printf("hold <tile>: holds given tile\n");
         break;
@@ -518,6 +595,8 @@ void help(int what){
         fprintf(stderr, "[ERROR] " __FILE__ ":%i:0: no help for instruction with id %i\n", __LINE__, what);
         break;
     }
+	if(what > 0 && what < sizeof(single_char_cmd) / sizeof(single_char_cmd[0]))    
+		printf("    this command is equivalent to %c\n", single_char_cmd[what]);
 }
 
 #define PROMPT_EXPECT_ARGC(expected) if(((argc) - 1) != (expected)){\
@@ -918,8 +997,11 @@ int handle_prompt(int argc, const char** argv){
     switch (inst)
     {
     case INST_EXIT:
-        active = 0;
+		active = 0;
         return 0;
+    case INST_DISPLAY:
+		display(0);
+		return 0;
     case INST_HOLD:{
         PROMPT_EXPECT_ARGC(1);
         GET_UINT(tile, argv, 1);

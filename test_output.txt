@@ -293,23 +293,59 @@ draw mode: character
  8- |              E  E  E  E  E  E
  9- |                    E  E  E  E
 >>> [2J[H
-exit: quits the aplication, quit, e and q are equivalent to this
-hold <tile>: holds given tile
-holds <symbol>: holds the tile with given symbol
-place <x> <y>: places a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
-pencil <w> <h>: sets the width and height of the square for tile placement/copying
-move <x> <y>: moves camera to (x, y), mv is equivalent to this
-zoom <w> <h>: sets the camera's width and height
-symswap <tile> <new>: sets the new symbol for displaing a tile, expects an uint number as the tile and a character as its new palette symbol
-copy <x> <y>: sets the position of the rect used to take a copy of a selection, width and height are given by pencil, cp is equivalent to this
-paste <x> <x>: pastes a copied selection to (x, y), also check copy
-check <x> <y>: does a complete check for tile at (x, y), expects 2 uint numbers, x and y coordinates to check
-new <w> <h>: creates a new map with (w, h) dimensions
-newlayer : creates a new layer
-dellayer <optional: layers>...: deletes given layers, or current layer if none are passed, expects n uint arguments, the layers to delete, or nothing to delete current layer
-swaplayers <layer1> <layer2> : swaps layer1 and layer2, expects 2 uint arguments, the layers to swap
-layer <layer>: selects given layer, expects 1 uint argument, the layer to go to
-show <optional: what>... -<optional: flags>...: shows parameters, map, tiles and configurations
+
+-exit: quits the aplication, quit, e and q are equivalent to this
+    this command is equivalent to q
+
+-display: displays map
+    this command is equivalent to  
+
+-hold <tile>: holds given tile
+    this command is equivalent to g
+
+-holds <symbol>: holds the tile with given symbol
+    this command is equivalent to h
+
+-place <x> <y>: places a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
+    this command is equivalent to p
+
+-pencil <w> <h>: sets the width and height of the square for tile placement/copying
+    this command is equivalent to @
+
+-move <x> <y>: moves camera to (x, y), mv is equivalent to this
+    this command is equivalent to m
+
+-zoom <w> <h>: sets the camera's width and height
+    this command is equivalent to z
+
+-symswap <tile> <new>: sets the new symbol for displaing a tile, expects an uint number as the tile and a character as its new palette symbol
+    this command is equivalent to %
+
+-copy <x> <y>: sets the position of the rect used to take a copy of a selection, width and height are given by pencil, cp is equivalent to this
+    this command is equivalent to c
+
+-paste <x> <x>: pastes a copied selection to (x, y), also check copy
+    this command is equivalent to =
+
+-check <x> <y>: does a complete check for tile at (x, y), expects 2 uint numbers, x and y coordinates to check
+    this command is equivalent to .
+
+-new <w> <h>: creates a new map with (w, h) dimensions
+    this command is equivalent to n
+
+-newlayer : creates a new layer
+    this command is equivalent to +
+
+-dellayer <optional: layers>...: deletes given layers, or current layer if none are passed, expects n uint arguments, the layers to delete, or nothing to delete current layer
+    this command is equivalent to -
+
+-swaplayers <layer1> <layer2> : swaps layer1 and layer2, expects 2 uint arguments, the layers to swap
+    this command is equivalent to /
+
+-layer <layer>: selects given layer, expects 1 uint argument, the layer to go to
+    this command is equivalent to l
+
+-show <optional: what>... -<optional: flags>...: shows parameters, map, tiles and configurations
     use <what>:    map: to show the map's configuration and display map in single character mode
     mapf: to display map with all layers, in the single character mode the number of interssections will be displayed per each tile
     layer: to show layer's configuration
@@ -325,7 +361,9 @@ show <optional: what>... -<optional: flags>...: shows parameters, map, tiles and
         s <tile symbol>: displays tile with tile symbol
         skip_question: skip questions about wether you want to draw things, etc
         dont_skip_question: dont skip questions about wether you want to draw things, etc
-pattern <patterns>...: each pattern is a space sepparated word where each character or character sequence performs a function
+    this command is equivalent to !
+
+-pattern <patterns>...: each pattern is a space sepparated word where each character or character sequence performs a function
     -characters ands sequences are:
         x<uint_number>: sets cursor x position
         y<uint_number>: sets cursor y position
@@ -345,13 +383,22 @@ pattern <patterns>...: each pattern is a space sepparated word where each charac
         l: places tiles and moves right
     -number preffixes can be used to tell how many times that pattern should repeat
         example: h12 10il wd x12 y13 n1 m1 3bpddsfn2m2h3p
-save <optional: path>: saves the map
+    this command is equivalent to :
+
+-save <optional: path>: saves the map
 	you can pass the path to the output save file, otherwise the map will be saved to the last loaded map or map.bin if no map was loaded
 	you can choose the .png extension to save the map as a png file, but for that the map needs to have less than 5 layers
-load <optional: path>: loads a map, you can pass the path to the input file, otherwise the map will be reloaded to the last loaded map
-help <optional: what>: displays this help message or, if provided, a help message about <what>
+    this command is equivalent to v
+
+-load <optional: path>: loads a map, you can pass the path to the input file, otherwise the map will be reloaded to the last loaded map
+    this command is equivalent to ^
+
+-help <optional: what>: displays this help message or, if provided, a help message about <what>
+    this command is equivalent to ?
 >>> [2J[H
-exit: quits the aplication, quit, e and q are equivalent to this
+
+-exit: quits the aplication, quit, e and q are equivalent to this
+    this command is equivalent to q
 >>> [2J[H
        0  1  2  3  4  5  6  7  8  9
        |  |  |  |  |  |  |  |  |  |

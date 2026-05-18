@@ -107,13 +107,13 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
     - name: Test
-      if: runner.os != 'Windows'
+    #  if: runner.os != 'Windows'
       working-directory: ${{ github.workspace }}
       # perform tests in the test.py script
       run: python test.py ${{ steps.strings.outputs.build-output-dir }}/MapDesignerConsole test_input.txt test_output.txt test_map.txt
 
-    - name: Test-Windows
-      if: runner.os == 'Windows'
-      working-directory: ${{ github.workspace }}
-      # perform tests in the test.py script
-      run: python test.py ${{ steps.strings.outputs.build-output-dir }}\MapDesignerConsole.exe test_input.txt test_output.txt test_map.txt
+    #- name: Test-Windows
+    #  if: runner.os == 'Windows'
+    #  working-directory: ${{ github.workspace }}
+    #  # perform tests in the test.py script
+    #  run: python test.py ${{ steps.strings.outputs.build-output-dir }}\MapDesignerConsole test_input.txt test_output.txt test_map.txt

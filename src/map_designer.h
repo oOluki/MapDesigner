@@ -57,6 +57,47 @@ static int pencilh = 1;
 static int copyx = -1;
 static int copyy = -1;
 
+
+#define BUFF_CAP 1024
+
+static char buff[BUFF_CAP];
+static int  buffsize = 0;
+
+static char DEFAULT_PALETTE[] = " 123456789abcdefghijklmnopqrstuvwxyz";
+
+static char* palette = DEFAULT_PALETTE;
+
+static int palette_len = (sizeof(DEFAULT_PALETTE) - sizeof(DEFAULT_PALETTE[0])) / sizeof(DEFAULT_PALETTE[0]);
+
+#define DEFAULT_ASCII "@#Xx%*+=~-:. "
+
+static const char* ascii_map = DEFAULT_ASCII;
+static int         ascii_len = sizeof(DEFAULT_ASCII) - sizeof(char);
+
+#define ALIGN_BUFF_TO(N) if((N) > 1) buffsize += (N) - (buffsize % (N))
+
+static const char* output_path;
+static FILE* output;
+
+static void (*display)(int);
+
+static const char* tileset_path;
+static stbi_uc* tileset;
+static int tileset_tilew;
+static int tileset_tileh;
+static int tilesetx;
+static int tilesety;
+static int tileset_comp;
+
+static uint32_t* pixels;
+static int       pixelsw;
+static int       pixelsh;
+
+static int cursorx;
+static int cursory;
+
+static int active = 0;
+
 static inline int is_png_extension(const char* path){
     if(!path) return 0;
     int path_len = 0;
@@ -413,6 +454,289 @@ int paste(int destx, int desty){
         }
     }
     return 0;
+}
+
+
+
+
+static inline int cramp(int x, int max, int min) {
+	if (max < min) {
+		const int dummy = max;
+		max = min;
+		min = dummy;    
+	}  
+	if (x > max)
+	  x = max;
+	if (x < min)
+		x = min;
+	return x;  
+}
+
+static inline void consume_whole_line(){
+    for(int c = getchar(); c && c != '\n' && c != EOF; c = getchar());
+}
+
+
+static inline void* align_buff_to(int n){
+    if(n) buffsize += n - (buffsize % n);
+    return (void*) &buff[buffsize];
+}
+
+static int getascii_color_index(uint32_t color){
+
+    const uint32_t rw = 2126;
+    const uint32_t gw = 7152;
+    const uint32_t bw =  722;
+
+    const uint32_t r = ((color >>  0) & 0xFF);
+    const uint32_t g = ((color >>  8) & 0xFF);
+    const uint32_t b = ((color >> 16) & 0xFF);
+    const uint32_t a = ((color >> 24) & 0xFF);
+
+    if(!a) return 0;
+
+    const uint32_t brightness = (rw * r + gw * g + bw * b) / (rw + gw + bw);
+
+    return (brightness <= 255)? (brightness * (ascii_len - 1)) / 255 : (ascii_len - 1);
+}
+
+static void print_map(int draw_interssections){
+
+    if(output == stdout) printf("\x1B[2J\x1B[H\n");
+    else{
+        if(output) fclose(output);
+        output = NULL;
+        output = fopen(output_path, "w");
+        if(!output){
+            fprintf(stderr, "[ERROR] could not open output '%s', switching back to stdout\n", output_path);
+            output = stdout;
+        }
+    }
+
+    const int i0 = (cameray < 0)? 0 : cameray;
+    const int j0 = (camerax < 0)? 0 : camerax;
+    const int irange = (cameray + camerah < maph)? cameray + camerah : maph;
+    const int jrange = (camerax + cameraw < mapw)? camerax + cameraw : mapw;
+
+    int idigit_len = 1;
+    for(int _10n = 10; (int) (irange / _10n); _10n *= 10) idigit_len+=1;
+
+    int jdigit_len = 1;
+    for(int _10n = 10; (int) (jrange / _10n); _10n *= 10) jdigit_len+=1;
+
+    for(int i = 0; i < idigit_len + 3; i+=1)
+        putc(' ', output);
+
+    for(int j = j0; j < jrange; j+=1)
+        fprintf(output, "%*i", jdigit_len + 1, j);
+    putc('\n', output);
+    for(int i = 0; i < idigit_len + 3; i+=1)
+        putc(' ', output);
+    for(int j = j0; j < jrange; j+=1){
+        for(int i = (jdigit_len / 2) + 1; i; i-=1)
+            putc(' ', output);
+        putc('|', output);
+    }
+    putc('\n', output);
+    for(int i = 0; i < idigit_len + 3; i+=1)
+        putc(' ', output);
+    for(int j = j0; j < jrange; j+=1)
+        for(int i = 0; i < (jdigit_len + 1); i+=1)
+            putc('_', output);
+
+    putc('\n', output);
+
+    if(draw_interssections){
+        for(int i = i0; i < irange; i+=1){
+            fprintf(output, "%*i- |", idigit_len, i);
+            for(int j = j0; j < jrange; j+=1){
+                for(int i = (jdigit_len / 2) + 1; i; i-=1)
+                    putc(' ', output);
+                int interssections = 0;
+                for(int k = 0; k < layers; k+=1){
+                    interssections += (map[k][i * mapw + j] != 0);
+                }
+                if(interssections > 9){
+                    putc('!', output);
+                }
+                else if(interssections > 0){
+                    putc('0' + interssections, output);
+                }
+                else{
+                    putc(' ', output);
+                }
+            }
+            putc('\n', output);
+        }
+    }
+    else{
+        for(int i = i0; i < irange; i+=1){
+            fprintf(output, "%*i- |", idigit_len, i);
+            for(int j = j0; j < jrange; j+=1){
+                for(int i = (jdigit_len / 2) + 1; i; i-=1)
+                    putc(' ', output);
+                putc(
+                    (map[current_layer][i * mapw + j] < palette_len && map[current_layer][i * mapw + j] >= 0)?
+                        (int) palette[map[current_layer][i * mapw + j]] : '~', output
+                );
+            }
+            putc('\n', output);
+        }
+    }
+
+}
+
+
+static inline uint32_t blend_color_channel(const uint32_t ct, const uint32_t at, const uint32_t cb){
+    return (ct * at + (cb * (255 - at))) / 255;
+}
+
+static inline uint32_t blend_colors(const uint32_t ct, const uint32_t cb){
+    const uint32_t rb = (cb >>  0) & 0xFF;
+    const uint32_t gb = (cb >>  8) & 0xFF;
+    const uint32_t bb = (cb >> 16) & 0xFF;
+    const uint32_t ab = (cb >> 24) & 0xFF;
+    const uint32_t rt = (ct >>  0) & 0xFF;
+    const uint32_t gt = (ct >>  8) & 0xFF;
+    const uint32_t bt = (ct >> 16) & 0xFF;
+    const uint32_t at = (ct >> 24) & 0xFF;
+    const uint32_t ro = blend_color_channel(rt, at, rb);
+    const uint32_t go = blend_color_channel(gt, at, gb);
+    const uint32_t bo = blend_color_channel(bt, at, bb);
+    return (ro << 0) | (go << 8) | (bo << 16) | (ab << 24);
+}
+
+static void render_tile_graphical(int tile, int x, int y, uint32_t* pixels, int pixelsw, int pixelsh, int pixels_stride){
+    if(!pixels || !tileset || tile == 0) return;
+    
+    const int y0 = (y < 0)? 0 : y;
+    const int x0 = (x < 0)? 0 : x;
+    const int yrange = (y + tileset_tileh < pixelsh)? y + tileset_tileh : pixelsh;
+    const int xrange = (x + tileset_tilew < pixelsw)? x + tileset_tilew : pixelsw;
+
+    tile -= 1;
+
+    if(tile >= tilesetx * tilesety || tile < 0){
+        const uint32_t color = 0xFF0000FF;
+        for(int i = y0; i < yrange; i+=1){
+            for(int j = x0; j < xrange; j+=1){
+                pixels[i * pixels_stride + j] = color;
+            }
+        }
+        return;
+    }
+    const int tiley = (tile / (tilesetx / tileset_tilew));
+    const int tilex = (tile % (tilesetx / tileset_tilew));
+    const int tileoffset = tiley * tileset_tileh * tilesetx + tilex * tileset_tilew;
+
+    y = y0;
+    for(int i = 0; i < tileset_tileh && y < yrange; i+=1){
+        x = x0;
+        for(int j = 0; j < tileset_tilew && x < xrange; j+=1){
+            uint32_t color = 0;
+            for(int k = 0; k < tileset_comp; k+=1){
+                color |= (tileset[(tileoffset + i * tilesetx + j) * tileset_comp + k]) << (k * 8);
+            }
+            pixels[y * pixels_stride + x] = blend_colors(color, pixels[y * pixels_stride + x]);
+            x += 1;
+        }
+        y += 1;
+    }
+}
+
+static void render_graphical(int draw_all_layers){
+
+    if(!tileset){
+        fprintf(stderr, "[ERROR] can't draw graphical representation of map, missing tileset, going back to standard\n");
+        display = print_map;
+        return;
+    }
+
+    const int pixelsw = cameraw * tileset_tilew;
+    const int pixelsh = camerah * tileset_tileh;
+    const int pixels_stride = pixelsw;
+
+    uint32_t* pixels = malloc(pixelsw * pixelsh * sizeof(pixels[0]));
+
+    if(!pixels){
+        fprintf(stderr, "[ERRROR] can't draw graphical representation of map, could not create pixel buffer\n");
+        return ;
+    }
+
+    for(int i = 0; i < cameraw * tileset_tilew * camerah * tileset_tileh; i+=1) pixels[i] = 0xFF000000;
+
+    const int i0 = (cameray < 0)? 0 : cameray;
+    const int j0 = (camerax < 0)? 0 : camerax;
+    const int irange = (cameray + camerah < maph)? cameray + camerah : maph;
+    const int jrange = (camerax + cameraw < mapw)? camerax + cameraw : mapw;
+
+    // if cameray < 0
+    for(int i = cameray; i < 0; i+=1){
+        for(int j = camerax; j < jrange; j+=1){
+            render_tile_graphical(0, j * tileset_tilew, i * tileset_tileh, pixels, pixelsw, pixelsh, pixels_stride);
+        }
+    }
+    // if camerax < 0
+    for(int j = camerax; j < 0; j+=1){
+        for(int i = cameray; i < irange; i+=1){
+            render_tile_graphical(0, j * tileset_tilew, i * tileset_tileh, pixels, pixelsw, pixelsh, pixels_stride);
+        }
+    }
+    if(draw_all_layers){
+        for(int i = i0; i < irange; i+=1){
+            for(int j = j0; j < jrange; j+=1){
+                for(int k = 0; k < layers; k+=1){
+                    render_tile_graphical(
+                        map[k][i * mapw + j],
+                        j * tileset_tilew, i * tileset_tileh,
+                        pixels, pixelsw, pixelsh, pixels_stride
+                    );
+                }
+            }
+        }
+    }
+    else{
+        for(int i = i0; i < irange; i+=1){
+            for(int j = j0; j < jrange; j+=1){
+                render_tile_graphical(
+                    map[current_layer][i * mapw + j],
+                    j * tileset_tilew, i * tileset_tileh,
+                    pixels, pixelsw, pixelsh, pixels_stride
+                );
+            }
+        }
+    }
+
+    if(is_png_extension(output_path)){
+        if(output) fclose(output);
+        output = NULL;
+        if(!stbi_write_png(output_path, pixelsw, pixelsh, (int) sizeof(pixels[0]), pixels, pixels_stride * (int) sizeof(pixels[0]))){
+            fprintf(stderr, "[ERROR] could not render graphical representation to '%s'\n", output_path);
+        }
+    }
+    else{
+        if(output && output != stdout){
+            fclose(output);
+            output = NULL;
+            output = fopen(output_path, "w");
+        }
+        if(!output){
+            fprintf(stderr, "[ERROR] could not open output '%s', switching back to stdout\n", output_path);
+            output = stdout;
+            free(pixels);
+            return ;
+        }
+        printf("\x1B[2J\x1B[H\n");
+        for(int i = 0; i < irange * tileset_tileh; i+=1){
+            for(int j = 0; j < jrange * tileset_tilew; j+=1){
+                fprintf(output, "%c", ascii_map[getascii_color_index(pixels[i * pixels_stride + j])]);
+            }
+            fprintf(output, "\n");
+        }
+    }
+
+
+    free(pixels);
 }
 
 #endif // =====================  END OF FILE MAP_DESIGNER_H ===========================

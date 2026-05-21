@@ -319,7 +319,7 @@ draw mode: character
     this command is equivalent to z
 
 -symswap <tile> <new>: sets the new symbol for displaing a tile, expects an uint number as the tile and a character as its new palette symbol
-    this command is equivalent to %
+    this command is equivalent to ;
 
 -copy <x> <y>: sets the position of the rect used to take a copy of a selection, width and height are given by pencil, cp is equivalent to this
     this command is equivalent to c
@@ -341,6 +341,9 @@ draw mode: character
 
 -swaplayers <layer1> <layer2> : swaps layer1 and layer2, expects 2 uint arguments, the layers to swap
     this command is equivalent to /
+
+-merge <layer 1> <layer 2>: merge layer 1 to layer 2, preserving layer 1
+    this command is equivalent to "
 
 -layer <layer>: selects given layer, expects 1 uint argument, the layer to go to
     this command is equivalent to l
@@ -392,6 +395,10 @@ draw mode: character
 
 -load <optional: path>: loads a map, you can pass the path to the input file, otherwise the map will be reloaded to the last loaded map
     this command is equivalent to ^
+
+-query <queried tile> <optional: new tile number> <optional: -q>: searches for <queried tile>, if <new tile number> is provided <queried tile> will be replaced by it
+	the -q flag sets query mode, where the program will stop at each query hit, it is also usefull for searches
+    this command is equivalent to %
 
 -help <optional: what>: displays this help message or, if provided, a help message about <what>
     this command is equivalent to ?

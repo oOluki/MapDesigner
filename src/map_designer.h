@@ -216,7 +216,16 @@ int load_map(const char* path){
         maph = h;
         layers = comp;
         map = malloc(layers * sizeof(map[0]));
-        for(int k = 0; k < layers; k+=1) map[k] = malloc(mapw * maph * sizeof(map[0][0]));
+        for(int k = 0; k < layers; k+=1){
+            map[k] = malloc(mapw * maph * sizeof(map[0][0]));
+            for(int i = 0; i < maph; i+=1){
+                for(int j = 0; j < mapw; j+=1){
+                    map[k][i * mapw + j] = pixels[(i * w + j) * comp + k];
+                }
+            }
+        }
+
+        stbi_image_free(pixels);
 
         if(map_path == path) return 0;
         int i = 0;
@@ -360,7 +369,7 @@ int save_map(const char* path){
                     output[(i * mapw + j) * layers + k] = 0;
             }
         }
-        if(!stbi_write_png(path, mapw, maph, layers, map, mapw * layers)){
+        if(!stbi_write_png(path, mapw, maph, layers, output, mapw * layers)){
             fprintf(stderr, "[ERROR] could not save map to '%s' as png\n", path);
             free(output);
             return 1;
@@ -420,6 +429,27 @@ int place(int tile, int x, int y){
         for(int j = x0; j < xrange; j+=1){
             map[current_layer][i * mapw + j] = (char) tile;
         }
+    }
+    return 0;
+}
+
+int place_hollow(int tile, int x, int y){
+    const int xrange = (x + pencilw < mapw)? x + pencilw : mapw;
+    const int yrange = (y + pencilh < maph)? y + pencilh : maph;
+    const int x0 = (x < 0)? 0 : x;
+    const int y0 = (y < 0)? 0 : y;
+
+    if(x >= 0 && x < mapw) for(int i = y0; i < yrange; i+=1){
+        map[current_layer][i * mapw + x]       = (char) tile;
+    }
+    if(xrange > 0 && x + pencilw <= mapw) for(int i = y0; i < yrange; i+=1){
+        map[current_layer][i * mapw + xrange - 1]   = (char) tile;
+    }
+    if(y >= 0 && y < maph) for(int j = x0; j < xrange; j+=1){
+        map[current_layer][y * mapw + j]       = (char) tile;
+    }
+    if(yrange > 0 && y + pencilh <= maph) for(int j = x0; j < xrange; j+=1){
+        map[current_layer][(yrange - 1) * mapw + j]   = (char) tile;
     }
     return 0;
 }
@@ -670,25 +700,13 @@ static void render_graphical(int draw_all_layers){
     const int irange = (cameray + camerah < maph)? cameray + camerah : maph;
     const int jrange = (camerax + cameraw < mapw)? camerax + cameraw : mapw;
 
-    // if cameray < 0
-    for(int i = cameray; i < 0; i+=1){
-        for(int j = camerax; j < jrange; j+=1){
-            render_tile_graphical(0, j * tileset_tilew, i * tileset_tileh, pixels, pixelsw, pixelsh, pixels_stride);
-        }
-    }
-    // if camerax < 0
-    for(int j = camerax; j < 0; j+=1){
-        for(int i = cameray; i < irange; i+=1){
-            render_tile_graphical(0, j * tileset_tilew, i * tileset_tileh, pixels, pixelsw, pixelsh, pixels_stride);
-        }
-    }
     if(draw_all_layers){
         for(int i = i0; i < irange; i+=1){
             for(int j = j0; j < jrange; j+=1){
                 for(int k = 0; k < layers; k+=1){
                     render_tile_graphical(
                         map[k][i * mapw + j],
-                        j * tileset_tilew, i * tileset_tileh,
+                        (j - j0) * tileset_tilew, (i - i0) * tileset_tileh,
                         pixels, pixelsw, pixelsh, pixels_stride
                     );
                 }
@@ -700,7 +718,7 @@ static void render_graphical(int draw_all_layers){
             for(int j = j0; j < jrange; j+=1){
                 render_tile_graphical(
                     map[current_layer][i * mapw + j],
-                    j * tileset_tilew, i * tileset_tileh,
+                    (j - j0) * tileset_tilew, (i - i0) * tileset_tileh,
                     pixels, pixelsw, pixelsh, pixels_stride
                 );
             }
@@ -727,8 +745,8 @@ static void render_graphical(int draw_all_layers){
             return ;
         }
         printf("\x1B[2J\x1B[H\n");
-        for(int i = 0; i < irange * tileset_tileh; i+=1){
-            for(int j = 0; j < jrange * tileset_tilew; j+=1){
+        for(int i = 0; i < (irange - i0) * tileset_tileh; i+=1){
+            for(int j = 0; j < (jrange - j0) * tileset_tilew; j+=1){
                 fprintf(output, "%c", ascii_map[getascii_color_index(pixels[i * pixels_stride + j])]);
             }
             fprintf(output, "\n");

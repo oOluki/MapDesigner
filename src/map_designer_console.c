@@ -64,7 +64,10 @@ void help(int what){
         printf("holds <symbol>: holds the tile with given symbol\n");
         break;
     case INST_PLACE:
-        printf("place <x> <y>: places a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)\n");
+        printf("place <x> <y>: fills a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)\n");
+        break;
+    case INST_PLACEHOLLOW:
+        printf("hollow <x> <y>: places a hollow square of held tiles at (x, y) with pencil's width and height (check pencil instruction)\n");
         break;
     case INST_PENCIL:
         printf("pencil <w> <h>: sets the width and height of the square for tile placement/copying\n");
@@ -242,6 +245,17 @@ int handle_prompt(int argc, const char** argv){
         GET_UINT(x, argv, 1);
         GET_UINT(y, argv, 2);
         if(place(held_tile, x, y)){
+            fprintf(stderr, "[ERROR] failed to place tile %i to (%i, %i)\n", held_tile, x, y);
+            return 1;
+        }
+        display(0);
+    }
+        return 0;
+    case INST_PLACEHOLLOW:{
+        PROMPT_EXPECT_ARGC(2);
+        GET_UINT(x, argv, 1);
+        GET_UINT(y, argv, 2);
+        if(place_hollow(held_tile, x, y)){
             fprintf(stderr, "[ERROR] failed to place tile %i to (%i, %i)\n", held_tile, x, y);
             return 1;
         }
@@ -694,7 +708,7 @@ int main(int argc, char** argv){
                 "\tsingle_character_graphics: displays map with tiles represented by single characters\n"
                 "\tcommon_graphics: display map with tiles represented by graphical form (tilesheet required)\n"
                 "\ttw: sets the tileset's tile width\n"
-                "\tth: sets the tileset's tile height"
+                "\tth: sets the tileset's tile height\n"
                 "keyword arguments are:\n"
                 "\tpalette <symbol sequence>: sets the tile's symbol palette for display\n"
                 "\ttilesheet <tilesheet_path>: loads the tilesheet that'll get used to graphically draw the map, provide the tilesheet's tile width and height before using this\n"
@@ -745,7 +759,7 @@ int main(int argc, char** argv){
             ascii_map = argv[i];
         }
         else if(cmp_str(argv[i], "--tilesheet")){
-            if(i >= argc){
+            if(i + 1 >= argc){
                 fprintf(stderr, "[ERROR] expected tileset path after '%s'\n", argv[i]);
                 MAIN_RETURN_STATUS(1);
             }

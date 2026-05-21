@@ -10,6 +10,7 @@ enum Instructions {
   INST_HOLD,
   INST_HOLDS,
   INST_PLACE,
+  INST_PLACEHOLLOW,
   INST_PENCIL,
   INST_MOVE,
   INST_ZOOM,
@@ -41,6 +42,7 @@ static char single_char_cmd[INST_COUNT] = {
     [INST_HOLD] = 'g',
     [INST_HOLDS] = 'h',
     [INST_PLACE] = 'p',
+    [INST_PLACEHOLLOW] = 'P',
     [INST_PENCIL] = '@',
     [INST_MOVE] = 'm',
     [INST_ZOOM] = 'z',
@@ -103,6 +105,7 @@ int get_instruction(const char *what) {
     if(cmp_str(what, "hold"))                           return INST_HOLD       ;
     if(cmp_str(what, "holds"))                          return INST_HOLDS      ;
     if(cmp_str(what, "place"))                          return INST_PLACE      ;
+    if(cmp_str(what, "hollow"))                         return INST_PLACEHOLLOW;
     if(cmp_str(what, "pencil"))                         return INST_PENCIL     ;
     if(cmp_str(what, "move") || cmp_str(what, "mv"))    return INST_MOVE       ;
     if(cmp_str(what, "zoom"))                           return INST_ZOOM       ;

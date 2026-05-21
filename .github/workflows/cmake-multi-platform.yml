@@ -116,4 +116,4 @@ jobs:
       if: runner.os == 'Windows'
       working-directory: ${{ github.workspace }}
       # perform tests in the test.py script
-      run: python test.py ${{ steps.strings.outputs.build-output-dir }}/Debug/MapDesignerConsole test_input.txt test_output.txt test_map.txt
+      run: python test.py ${{ steps.strings.outputs.build-output-dir }}/Debug/MapDesignerConsole ${{ github.workspace }}/test_input.txt ${{ github.workspace }}/test_output.txt ${{ github.workspace }}/test_map.txt

@@ -20,6 +20,7 @@ if platform.system() == "Windows":
     EXECUTABLE = EXECUTABLE.replace("/", "\\")
     INPUT = INPUT.replace("/", "\\")
     OUTPUT = OUTPUT.replace("/", "\\")
+    MAP = MAP.replace("/", "\\")
 
 def cmpf(f1, f2, mode):
     file1 = open(f1, mode)

@@ -262,7 +262,7 @@ cursor: (20, 20)
 output: stdout
 tilesheet = (null)
 tilew = 0, tileh = 0
-ascii: @#Xx%*+=~-:. 
+ascii: @#&$Xx%!*+=;:~-. 
 draw mode: character
 >>> [2J[H
        0  1  2  3  4  5  6  7  8  9
@@ -305,6 +305,9 @@ draw mode: character
 
 -holds <symbol>: holds the tile with given symbol
     this command is equivalent to h
+
+-maptile <tile key> <tile value>: maps <tile key> to <tile value>, can only map tiles up to 31 key. If no <tile value> is provided then the <tile key> will be unmapped
+    this command is equivalent to $
 
 -place <x> <y>: fills a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
     this command is equivalent to p
@@ -352,7 +355,8 @@ draw mode: character
     this command is equivalent to l
 
 -show <optional: what>... -<optional: flags>...: shows parameters, map, tiles and configurations
-    use <what>:    map: to show the map's configuration and display map in single character mode
+    use <what>:
+    map: to show the map's configuration and display map in single character mode
     mapf: to display map with all layers, in the single character mode the number of interssections will be displayed per each tile
     layer: to show layer's configuration
     camera: to show the camera's configuration
@@ -362,6 +366,7 @@ draw mode: character
     tilesheet: to check the tile sheet configuration
     tileset: to show all tile symbols available
     mode: to show the draw mode, ascii sequence and output file path
+    tile_mapping: to show the mapped tiles configuration
     -flags can be:
         t <tile number>: displays tile with tile number
         s <tile symbol>: displays tile with tile symbol

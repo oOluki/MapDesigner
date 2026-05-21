@@ -320,7 +320,7 @@ int load_map(const char* path){
     const int _map_size = width * height;
     TILE** _map = malloc(lyr * sizeof(_map[0]));
     for(int k = 0; k < lyr; k +=1){
-        _map[k] = malloc(_map_size);
+        _map[k] = malloc(_map_size * sizeof(_map[0][0]));
         for(int i = 0; i < _map_size; i+=1){
             fskip(f, &c, &column, &row);
             const int tile = fparse_uint(f, &c, &column);

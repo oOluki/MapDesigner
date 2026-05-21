@@ -447,7 +447,7 @@ int handle_prompt(int argc, const char** argv){
         const int hmin = (h < maph)? h : maph;
 
         for(int k = 0; k < layers; k += 1){
-            nmap[k] = malloc(w * h);
+            nmap[k] = malloc(w * h * sizeof(nmap[0][0]));
             for(int i = 0; i < hmin; i+=1){
                 for(int j = 0; j < wmin; j += 1){
                     nmap[k][i * w + j] = map[k][i * mapw + j];

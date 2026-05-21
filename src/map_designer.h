@@ -35,8 +35,11 @@ SOFTWARE.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#ifndef TILE
+    #define TILE unsigned int
+#endif
 
-static char** map;
+static TILE** map;
 static int  mapw = 0;
 static int  maph = 0;
 static int  layers = 0;
@@ -69,7 +72,7 @@ static char* palette = DEFAULT_PALETTE;
 
 static int palette_len = (sizeof(DEFAULT_PALETTE) - sizeof(DEFAULT_PALETTE[0])) / sizeof(DEFAULT_PALETTE[0]);
 
-#define DEFAULT_ASCII "@#Xx%*+=~-:. "
+#define DEFAULT_ASCII "@#&$Xx%!*+=;:~-. "
 
 static const char* ascii_map = DEFAULT_ASCII;
 static int         ascii_len = sizeof(DEFAULT_ASCII) - sizeof(char);
@@ -97,6 +100,38 @@ static int cursorx;
 static int cursory;
 
 static int active = 0;
+
+static int changed_since_last_save = 0;
+
+static TILE tile_mapping[32];
+
+static uint32_t __is_tile_mapped = 0;
+
+static inline int is_tile_mapped(TILE tile){
+    return ((tile < sizeof(tile_mapping) / sizeof(tile_mapping[0])) && (__is_tile_mapped & (1 << tile)));
+}
+
+static inline TILE get_real_tile(TILE tile){
+    return is_tile_mapped(tile)? tile_mapping[tile] : tile;
+}
+
+static inline int map_tile(TILE key, TILE value){
+    if(key >= sizeof(tile_mapping) / sizeof(tile_mapping[0])){
+        fprintf(stderr, "[ERROR] can not map tiles bigger than %i\n", (int) (sizeof(tile_mapping) / sizeof(tile_mapping[0])) - 1);
+        return 1;
+    }
+
+    __is_tile_mapped |= (1 << key);
+
+    tile_mapping[key] = value;
+
+    return 0;
+}
+
+static inline void unmap_tile(TILE key){
+    if(key < sizeof(tile_mapping) / sizeof(tile_mapping[0]))
+        __is_tile_mapped &= ~(1 << key);
+}
 
 static inline int is_png_extension(const char* path){
     if(!path) return 0;
@@ -283,7 +318,7 @@ int load_map(const char* path){
     fskip(f, &c, &column, &row);
 
     const int _map_size = width * height;
-    char** _map = malloc(lyr * sizeof(_map[0]));
+    TILE** _map = malloc(lyr * sizeof(_map[0]));
     for(int k = 0; k < lyr; k +=1){
         _map[k] = malloc(_map_size);
         for(int i = 0; i < _map_size; i+=1){
@@ -376,6 +411,8 @@ int save_map(const char* path){
         }
         free(output);
 
+        changed_since_last_save = 0;
+
         if(map_path == path) return 0;
         int i = 0;
         for(; path[i]; i+=1);
@@ -409,6 +446,8 @@ int save_map(const char* path){
     }
     fclose(f);
 
+    changed_since_last_save = 0;
+
     if(map_path == path){
         return 0;
     }
@@ -421,36 +460,44 @@ int save_map(const char* path){
     return 0;
 }
 
-int place(int tile, int x, int y){
+int place(TILE tile, int x, int y){
     const int xrange = (x + pencilw < mapw)? x + pencilw : mapw;
     const int yrange = (y + pencilh < maph)? y + pencilh : maph;
     const int x0 = (x < 0)? 0 : x;
+
+    tile = get_real_tile(tile);
+
     for(int i = (y < 0)? 0 : y; i < yrange; i+=1){
         for(int j = x0; j < xrange; j+=1){
-            map[current_layer][i * mapw + j] = (char) tile;
+            map[current_layer][i * mapw + j] = (TILE) tile;
         }
     }
+    changed_since_last_save = 1;
     return 0;
 }
 
-int place_hollow(int tile, int x, int y){
+int place_hollow(TILE tile, int x, int y){
     const int xrange = (x + pencilw < mapw)? x + pencilw : mapw;
     const int yrange = (y + pencilh < maph)? y + pencilh : maph;
     const int x0 = (x < 0)? 0 : x;
     const int y0 = (y < 0)? 0 : y;
 
+    tile = get_real_tile(tile);
+
     if(x >= 0 && x < mapw) for(int i = y0; i < yrange; i+=1){
-        map[current_layer][i * mapw + x]       = (char) tile;
+        map[current_layer][i * mapw + x]       = (TILE) tile;
     }
     if(xrange > 0 && x + pencilw <= mapw) for(int i = y0; i < yrange; i+=1){
-        map[current_layer][i * mapw + xrange - 1]   = (char) tile;
+        map[current_layer][i * mapw + xrange - 1]   = (TILE) tile;
     }
     if(y >= 0 && y < maph) for(int j = x0; j < xrange; j+=1){
-        map[current_layer][y * mapw + j]       = (char) tile;
+        map[current_layer][y * mapw + j]       = (TILE) tile;
     }
     if(yrange > 0 && y + pencilh <= maph) for(int j = x0; j < xrange; j+=1){
-        map[current_layer][(yrange - 1) * mapw + j]   = (char) tile;
+        map[current_layer][(yrange - 1) * mapw + j]   = (TILE) tile;
     }
+    changed_since_last_save = 1;
+
     return 0;
 }
 
@@ -483,6 +530,8 @@ int paste(int destx, int desty){
             map[current_layer][(i + desty) * mapw + (j + destx)] = map[current_layer][(i + copyy) * mapw + (j + copyx)];
         }
     }
+    changed_since_last_save = 1;
+
     return 0;
 }
 
@@ -512,6 +561,10 @@ static inline void* align_buff_to(int n){
     return (void*) &buff[buffsize];
 }
 
+static inline int getascii_alpha_index(uint8_t alpha){
+    return (ascii_len - 1) - ((alpha * (ascii_len - 1)) / 255); 
+}
+
 static int getascii_color_index(uint32_t color){
 
     const uint32_t rw = 2126;
@@ -527,7 +580,7 @@ static int getascii_color_index(uint32_t color){
 
     const uint32_t brightness = (rw * r + gw * g + bw * b) / (rw + gw + bw);
 
-    return (brightness <= 255)? (brightness * (ascii_len - 1)) / 255 : (ascii_len - 1);
+    return (brightness <= 255)? (ascii_len - 1) - ((brightness * (ascii_len - 1)) / 255) : 0;
 }
 
 static void print_map(int draw_interssections){
@@ -605,9 +658,20 @@ static void print_map(int draw_interssections){
             for(int j = j0; j < jrange; j+=1){
                 for(int i = (jdigit_len / 2) + 1; i; i-=1)
                     putc(' ', output);
+
+                TILE actual_tile = map[current_layer][i * mapw + j];
+                for(int i = 0; i < sizeof(tile_mapping) / sizeof(tile_mapping[0]); i+=1){
+                    if(tile_mapping[i] == actual_tile){
+                        if(is_tile_mapped(i)){
+                            actual_tile = i;
+                            break;
+                        }
+                    }
+                }
+
                 putc(
-                    (map[current_layer][i * mapw + j] < palette_len && map[current_layer][i * mapw + j] >= 0)?
-                        (int) palette[map[current_layer][i * mapw + j]] : '~', output
+                    (actual_tile < palette_len && actual_tile >= 0)?
+                        (int) palette[actual_tile] : '~', output
                 );
             }
             putc('\n', output);
@@ -634,6 +698,39 @@ static inline uint32_t blend_colors(const uint32_t ct, const uint32_t cb){
     const uint32_t go = blend_color_channel(gt, at, gb);
     const uint32_t bo = blend_color_channel(bt, at, bb);
     return (ro << 0) | (go << 8) | (bo << 16) | (ab << 24);
+}
+
+static void put_color_char(uint32_t color){
+
+    static char _str[] = {
+        '\x1b', '[', '3', '8', ';', '2', ';',
+        'r', 'r', 'r', ';', 'g', 'g', 'g', ';', 'b', 'b', 'b', 'm', 'c', '\0'
+    };
+
+    const uint8_t r = (color >>  0) & 0xFF;
+    const uint8_t g = (color >>  8) & 0xFF;
+    const uint8_t b = (color >> 16) & 0xFF;
+    const uint8_t a = (color >> 24) & 0xFF;
+
+    const char c = '@';//ascii_map[getascii_alpha_index(a)];
+
+    _str[7] = (r / 100) + '0';
+    _str[8] = ((r / 10) & 9) + '0';
+    _str[9] = (r & 9) + '0';
+
+    _str[11] = (g / 100) + '0';
+    _str[12] = ((g / 10) & 9) + '0';
+    _str[13] = (g & 9) + '0';
+
+    _str[15] = (b / 100) + '0';
+    _str[16] = ((b / 10) & 9) + '0';
+    _str[17] = (b & 9) + '0';
+
+    _str[19] = c;
+
+
+    printf("%s\x1b[0m", _str);
+    //printf("\x1b[38;2;255;128;0mOrange\x1b[0m\n");
 }
 
 static void render_tile_graphical(int tile, int x, int y, uint32_t* pixels, int pixelsw, int pixelsh, int pixels_stride){
@@ -703,7 +800,7 @@ static void render_graphical(int draw_all_layers){
     if(draw_all_layers){
         for(int i = i0; i < irange; i+=1){
             for(int j = j0; j < jrange; j+=1){
-                for(int k = 0; k < layers; k+=1){
+                for(int k = layers - 1; k > -1; k-=1){
                     render_tile_graphical(
                         map[k][i * mapw + j],
                         (j - j0) * tileset_tilew, (i - i0) * tileset_tileh,
@@ -744,17 +841,60 @@ static void render_graphical(int draw_all_layers){
             free(pixels);
             return ;
         }
-        printf("\x1B[2J\x1B[H\n");
-        for(int i = 0; i < (irange - i0) * tileset_tileh; i+=1){
-            for(int j = 0; j < (jrange - j0) * tileset_tilew; j+=1){
-                fprintf(output, "%c", ascii_map[getascii_color_index(pixels[i * pixels_stride + j])]);
+        if(output == stdout){
+            printf("\x1B[2J\x1B[H\n");
+            for(int i = 0; i < (irange - i0) * tileset_tileh; i+=1){
+                for(int j = 0; j < (jrange - j0) * tileset_tilew; j+=1){
+                    put_color_char(pixels[i * pixels_stride + j]);
+                }
+                fprintf(output, "\n");
             }
-            fprintf(output, "\n");
+        }
+        else{
+            for(int i = 0; i < (irange - i0) * tileset_tileh; i+=1){
+                for(int j = 0; j < (jrange - j0) * tileset_tilew; j+=1){
+                    fprintf(output, "%c", ascii_map[getascii_color_index(pixels[i * pixels_stride + j])]);
+                }
+                fprintf(output, "\n");
+            }
         }
     }
 
 
     free(pixels);
+}
+
+
+static void render_terminal_and_graphics(int draw_all_layers){
+
+    FILE* const saved_output = output;
+
+    output = stdout;
+
+    print_map(draw_all_layers);
+
+    output = saved_output;
+
+    if(output == stdout){
+        return ;
+    }
+    render_graphical(draw_all_layers);
+}
+
+static void render_terminal_and_print_map(int draw_all_layers){
+
+    FILE* const saved_output = output;
+
+    output = stdout;
+
+    print_map(draw_all_layers);
+
+    output = saved_output;
+
+    if(output == stdout){
+        return ;
+    }
+    print_map(draw_all_layers);
 }
 
 #endif // =====================  END OF FILE MAP_DESIGNER_H ===========================

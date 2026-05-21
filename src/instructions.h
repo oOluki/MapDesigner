@@ -9,6 +9,7 @@ enum Instructions {
   INST_DISPLAY,  
   INST_HOLD,
   INST_HOLDS,
+  INST_MAPTILE,
   INST_PLACE,
   INST_PLACEHOLLOW,
   INST_PENCIL,
@@ -41,6 +42,7 @@ static char single_char_cmd[INST_COUNT] = {
     [INST_DISPLAY] = ' ',
     [INST_HOLD] = 'g',
     [INST_HOLDS] = 'h',
+    [INST_MAPTILE] = '$',
     [INST_PLACE] = 'p',
     [INST_PLACEHOLLOW] = 'P',
     [INST_PENCIL] = '@',
@@ -84,11 +86,11 @@ int get_instruction(const char *what) {
 				camerax -= 1;
 			return INST_DISPLAY;
 		case 's':
-			if (cameray + camerah < maph - 1)
+			if (cameray + camerah < maph)
 				cameray += 1;
 			return INST_DISPLAY;
 		case 'd':
-			if (camerax + cameraw < mapw - 1)
+			if (camerax + cameraw < mapw)
 				camerax += 1;
 			return INST_DISPLAY;                
 
@@ -104,6 +106,7 @@ int get_instruction(const char *what) {
     if(cmp_str(what, "display"))                        return INST_DISPLAY    ;
     if(cmp_str(what, "hold"))                           return INST_HOLD       ;
     if(cmp_str(what, "holds"))                          return INST_HOLDS      ;
+    if(cmp_str(what, "maptile"))                        return INST_MAPTILE    ;
     if(cmp_str(what, "place"))                          return INST_PLACE      ;
     if(cmp_str(what, "hollow"))                         return INST_PLACEHOLLOW;
     if(cmp_str(what, "pencil"))                         return INST_PENCIL     ;
@@ -175,6 +178,11 @@ int show(const char* what, int iwhat, int skip_questions){
             ascii_map,
             (display == render_graphical)? "graphics" : "character"
         );
+        for(TILE i = 0; i < sizeof(tile_mapping) / sizeof(tile_mapping[0]); i+=1){
+            if(is_tile_mapped(i)){
+                printf("tile %i maps to %i\n", i, get_real_tile(i));
+            }
+        }
         return 0;
     }
 
@@ -343,8 +351,35 @@ int show(const char* what, int iwhat, int skip_questions){
         }
         return 0;
     }
-    if(cmp_str(what, "tile") || cmp_str(what, "tileset")){
-        printf("held tile %i -> %c\n", held_tile, (held_tile >= 0 && held_tile < palette_len)? palette[held_tile] : ' ');
+    if(cmp_str(what, "tile")){
+        printf("held tile %i -> %c\n", held_tile, (held_tile >= 0 && held_tile < palette_len)? palette[held_tile] : '~');
+        if(is_tile_mapped(held_tile)){
+            printf("tile %i maps to %i\n", held_tile, get_real_tile(held_tile));
+        }
+        if(!skip_questions && tileset != NULL){
+            printf("do you wish to draw the tile graphical representation[y/n]?\n");
+            const int response = get_first_char_in_line();
+            if(response != 'y' && response != 'Y')
+                return 0;
+            
+            uint32_t* pixels = (uint32_t*) malloc(tileset_tilew * tileset_tileh * sizeof(pixels[0]));
+
+            render_tile_graphical(held_tile, 0, 0, pixels, tileset_tilew, tileset_tileh, tileset_tilew);
+
+            for(int i = 0; i < tileset_tileh; i+=1){
+                printf("  ");
+                for(int j = 0; j < tileset_tilew; j+=1){
+                    put_color_char(pixels[i * tileset_tilew + j]);
+                }
+                putchar('\n');
+            }
+
+            free(pixels);
+        }
+        return 0;
+    }
+    if(cmp_str(what, "tileset")){
+
         int draw_tileset = 0;
         if(!skip_questions){
             printf("do you wish to draw the tileset[y/n]?\n");
@@ -369,6 +404,12 @@ int show(const char* what, int iwhat, int skip_questions){
                 }
                 putchar('\n');
             }
+        }
+        return 0;
+    }
+    if(cmp_str(what, "tile_mapping")){
+        for(TILE i = 0; i < sizeof(tile_mapping) / sizeof(tile_mapping[0]); i+=1){
+            printf("tile %i maps to %i\n", i, get_real_tile(i));
         }
         return 0;
     }
@@ -517,6 +558,8 @@ static int query(int old, int _new, int query){
 
     if(_new < 0)
         _new = old;
+
+    changed_since_last_save = 1;
 
     if(!query){
 

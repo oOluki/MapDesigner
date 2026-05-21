@@ -63,6 +63,13 @@ void help(int what){
     case INST_HOLDS:
         printf("holds <symbol>: holds the tile with given symbol\n");
         break;
+    case INST_MAPTILE:
+        printf(
+            "maptile <tile key> <tile value>: maps <tile key> to <tile value>, can only map tiles up to %i key. "
+            "If no <tile value> is provided then the <tile key> will be unmapped\n",
+            (int) (sizeof(tile_mapping) / sizeof(tile_mapping[0]) - 1)
+        );
+        break;
     case INST_PLACE:
         printf("place <x> <y>: fills a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)\n");
         break;
@@ -111,7 +118,7 @@ void help(int what){
     case INST_SHOW:
         printf(
             "show <optional: what>... -<optional: flags>...: shows parameters, map, tiles and configurations\n"
-            "    use <what>:"
+            "    use <what>:\n"
             "    map: to show the map's configuration and display map in single character mode\n"
             "    mapf: to display map with all layers, in the single character mode the number of interssections will be displayed per each tile\n"
             "    layer: to show layer's configuration\n"
@@ -122,6 +129,7 @@ void help(int what){
             "    tilesheet: to check the tile sheet configuration\n"
             "    tileset: to show all tile symbols available\n"
             "    mode: to show the draw mode, ascii sequence and output file path\n"
+            "    tile_mapping: to show the mapped tiles configuration\n"
             "    -flags can be:\n"
             "        t <tile number>: displays tile with tile number\n"
             "        s <tile symbol>: displays tile with tile symbol\n"
@@ -197,7 +205,7 @@ void help(int what){
 int handle_prompt(int argc, const char** argv){
 
     if(argc < 1){
-        if(output == stdout)
+        if(output == stdout || display == render_terminal_and_graphics || display == render_terminal_and_print_map)
             display(0);
         else
             printf("\x1B[2J\x1B[H\n");
@@ -207,6 +215,21 @@ int handle_prompt(int argc, const char** argv){
     switch (inst)
     {
     case INST_EXIT:
+        if(changed_since_last_save){
+            printf("there are unsaved changes, enter q to quit, s to save and quit or c to cancel\n");
+            const int response = get_first_char_in_line();
+            if(response == 'q'){
+                active = 0;
+                return 0;
+            }
+            if(response == 's'){
+                if(save_map(map_path))
+                    return 1;
+                active = 0;
+                return 0;
+            }
+            return 0;
+        }
 		active = 0;
         return 0;
     case INST_DISPLAY:
@@ -238,6 +261,31 @@ int handle_prompt(int argc, const char** argv){
             return 1;
         }
         held_tile = tile;
+    }
+        return 0;
+    case INST_MAPTILE:{
+        if(argc < 2){
+            fprintf(stderr, "[ERROR] %s expects at least one argument, tile key\n", argv[0]);
+            return 1;
+        }
+        if(argc > 3){
+            fprintf(stderr, "[ERROR] %s expects at most two argument, tile key and tile value, got %i instead\n", argv[0], argc - 1);
+            return 1;
+        }
+
+        GET_UINT(x, argv, 1);
+        if(x >= sizeof(tile_mapping) / sizeof(tile_mapping[0])){
+            fprintf(stderr, "[ERROR] can only map tiles up to %i\n", (int) (sizeof(tile_mapping) / sizeof(tile_mapping[0])));
+            return 1;
+        }
+
+        if(argc == 2){
+            unmap_tile(x);
+            return 0;
+        }
+        GET_UINT(y, argv, 2);
+
+        return map_tile(x, y);
     }
         return 0;
     case INST_PLACE:{
@@ -367,7 +415,20 @@ int handle_prompt(int argc, const char** argv){
             const int tile = (int) map[k][y * mapw + x];
             if(tile){
                 tile_count += 1;
-                printf("\ttile %i with symbol %c at layer %i\n", tile, (tile >= 0 && tile < palette_len)? palette[tile] : '\0', k);
+                printf(
+                    "\ttile %i with symbol %c at layer %i",
+                    tile, (tile >= 0 && tile < palette_len)? palette[tile] : '\0', k
+                );
+                for(TILE i = 0; i < sizeof(tile_mapping) / sizeof(tile_mapping[0]); i+=1){
+                    if(tile_mapping[i] == tile && is_tile_mapped(i)){
+                        printf(
+                            ", tile %i is mapped by %i",
+                            tile, i
+                        );
+                        break;
+                    }
+                }
+                printf("\n");
             }
         }
         printf("\t%i tiles at (%i, %i)\n", tile_count, x, y);
@@ -381,7 +442,7 @@ int handle_prompt(int argc, const char** argv){
             fprintf(stderr, "[ERROR] can't have zeroed dimension(s)\n");
             return 1;
         }
-        char** nmap = malloc(layers * sizeof(nmap[0]));
+        TILE** nmap = malloc(layers * sizeof(nmap[0]));
         const int wmin = (w < mapw)? w : mapw;
         const int hmin = (h < maph)? h : maph;
 
@@ -411,7 +472,7 @@ int handle_prompt(int argc, const char** argv){
     }
         return 0;
     case INST_NEWLAYER:{
-        char** nmap = malloc((layers + 1) * sizeof(nmap[0]));
+        TILE** nmap = malloc((layers + 1) * sizeof(nmap[0]));
         if(!nmap){
             fprintf(stderr, "[ERROR] buy more RAM...\n");
             return 1;
@@ -480,7 +541,7 @@ int handle_prompt(int argc, const char** argv){
             fprintf(stderr, "[ERROR] layers only go up to %i, got %i and %i\n", layers - 1, first, second);
             return 1;
         }
-        char* const first_placeholder = map[first];
+        TILE* const first_placeholder = map[first];
         map[first] = map[second];
         map[second] = first_placeholder;
         display(0);
@@ -621,6 +682,11 @@ int handle_prompt(int argc, const char** argv){
             fprintf(stderr, "[ERROR] expected valid queried tile\n");
             return 1;
         }
+        if(is_tile_mapped(old)){
+            old = get_real_tile(old);
+        }
+        if(_new > -1 && is_tile_mapped(_new))
+            _new = get_real_tile(_new);
         const int count = query(old, _new, _query);
         if(count < 0){
             fprintf(stderr, "[ERROR] query failed\n");
@@ -702,6 +768,7 @@ int main(int argc, char** argv){
                 "usage: %s <optional: map_to_load> -<flags> --<kwargs>\n"
                 "flags are:\n"
                 "\to <output>: displays into output, if output has .png extension a graphical display will be forced and as such a tileset will be required\n"
+                "\tO: does the same as -o, but also displays map with tiles represented by single characters to terminal\n"
                 "\tw <map width>: sets the map width\n"
                 "\th <map_height>: sets the map height\n"
                 "\tl <layers>: sets the number of layers\n"
@@ -803,6 +870,30 @@ int main(int argc, char** argv){
                 output = NULL;
             }
         }
+        else if(cmp_str(argv[i], "-O")){
+            if(i + 1 >= argc){
+                fprintf(stderr, "[ERROR] expected output path after '-O'\n");
+                MAIN_RETURN_STATUS(1);
+            }
+            output_path = argv[++i];
+            output = fopen(output_path, "w");
+            if(!output){
+                fprintf(stderr, "[ERROR] could not open output '%s'\n", output_path);
+                MAIN_RETURN_STATUS(1);
+            }
+            if(is_png_extension(output_path)){
+                if(!tileset){
+                    fprintf(stderr, "[ERROR] provide a tileset to output to .png file\n");
+                    MAIN_RETURN_STATUS(1);
+                }
+                display = render_terminal_and_graphics;
+                fclose(output);
+                output = NULL;
+            }
+            else{
+                display = render_terminal_and_print_map;
+            }
+        }
         else if(cmp_str(argv[i], "-w")){
             if(i + 1 >= argc){
                 fprintf(stderr, "[ERROR] expected map width after '-w'\n");
@@ -837,9 +928,17 @@ int main(int argc, char** argv){
             }
         }
         else if(cmp_str(argv[i], "-common_graphics")){
+            if(display == render_terminal_and_graphics || display == render_terminal_and_print_map){
+                fprintf(stderr, "[ERROR] cannot use %s after -O flag, possible incompatible draw modes\n", argv[i]);
+                MAIN_RETURN_STATUS(1);
+            }
             display = render_graphical;
         }
         else if(cmp_str(argv[i], "-single_character_graphics")){
+            if(display == render_terminal_and_graphics || display == render_terminal_and_print_map){
+                fprintf(stderr, "[ERROR] cannot use %s after -O flag, possible incompatible draw modes\n", argv[i]);
+                MAIN_RETURN_STATUS(1);
+            }
             display = print_map;
         }
         else if(cmp_str(argv[i], "-tw")){

@@ -84,11 +84,13 @@ enum Instructions {
   INST_NEWLAYER,
   INST_DELLAYER,
   INST_SWAPLAYERS,
+  INST_MERGELAYERS,
   INST_LAYER,
   INST_SHOW,
   INST_PATTERN,
   INST_SAVE,
   INST_LOAD,
+  INST_QUERY,
   INST_HELP,
 
   // for counting purposes
@@ -105,7 +107,7 @@ static char single_char_cmd[INST_COUNT] = {
     [INST_PENCIL] = '@',
     [INST_MOVE] = 'm',
     [INST_ZOOM] = 'z',
-    [INST_SYMSWAP] = '%',
+    [INST_SYMSWAP] = ';',
     [INST_COPY] = 'c',
     [INST_PASTE] = '=',
     [INST_CHECK] = '.',
@@ -113,11 +115,13 @@ static char single_char_cmd[INST_COUNT] = {
     [INST_NEWLAYER] = '+',
     [INST_DELLAYER] = '-',
     [INST_SWAPLAYERS] = '/',
+    [INST_MERGELAYERS] = '\"',
     [INST_LAYER] = 'l',
     [INST_SHOW] = '!',
     [INST_PATTERN] = ':',
     [INST_SAVE] = 'v',
     [INST_LOAD] = '^',
+    [INST_QUERY] = '%',
     [INST_HELP] = '?'
 };
 
@@ -132,6 +136,10 @@ static inline int cramp(int x, int max, int min) {
 	if (x < min)
 		x = min;
 	return x;  
+}
+
+static inline void consume_whole_line(){
+    for(int c = getchar(); c && c != '\n' && c != EOF; c = getchar());
 }
 
 int get_instruction(const char *what) {
@@ -184,11 +192,13 @@ int get_instruction(const char *what) {
     if(cmp_str(what, "newlayer"))                       return INST_NEWLAYER   ;
     if(cmp_str(what, "dellayer"))                       return INST_DELLAYER   ;
     if(cmp_str(what, "swaplayers"))                     return INST_SWAPLAYERS ;
+    if(cmp_str(what, "merge"))                          return INST_MERGELAYERS;
     if(cmp_str(what, "layer"))                          return INST_LAYER      ;
     if(cmp_str(what, "show"))                           return INST_SHOW       ;
     if(cmp_str(what, "pattern"))                        return INST_PATTERN    ;
     if(cmp_str(what, "save"))                           return INST_SAVE       ;
     if(cmp_str(what, "load"))                           return INST_LOAD       ;
+    if(cmp_str(what, "query"))                          return INST_QUERY    ;
     if(cmp_str(what, "help"))                           return INST_HELP       ;
 
     return INST_NONE;
@@ -528,6 +538,9 @@ void help(int what){
     case INST_SWAPLAYERS:
         printf("swaplayers <layer1> <layer2> : swaps layer1 and layer2, expects 2 uint arguments, the layers to swap\n");
         break;
+    case INST_MERGELAYERS:
+        printf("merge <layer 1> <layer 2>: merge layer 1 to layer 2, preserving layer 1\n");
+        break;
     case INST_LAYER:
         printf("layer <layer>: selects given layer, expects 1 uint argument, the layer to go to\n");
         break;
@@ -587,6 +600,12 @@ void help(int what){
     case INST_LOAD:
         printf("load <optional: path>: loads a map, you can pass the path to the input file, otherwise the map will be reloaded to the last loaded map\n");
         break;
+    case INST_QUERY:
+        printf(
+            "query <queried tile> <optional: new tile number> <optional: -q>: searches for <queried tile>, if <new tile number> is provided <queried tile> will be replaced by it\n"
+            "\tthe -q flag sets query mode, where the program will stop at each query hit, it is also usefull for searches\n"
+        );
+        break;
     case INST_HELP:
         printf("help <optional: what>: displays this help message or, if provided, a help message about <what>\n");
         break;
@@ -610,12 +629,17 @@ void help(int what){
             return 1;\
         }
 
-int get_yes_or_no_asnwer(){
+static int get_first_char_in_line(){
     int c = 0;
     for(c = fgetc(stdin); c == ' ' || c == '\t'; c = fgetc(stdin));
-    const int answer = (c == 'y' || c == 'Y');
+    const int answer = c;
     for(c = fgetc(stdin); c != EOF && c != '\n'; c = fgetc(stdin));
     return answer;
+}
+
+static inline int get_yes_or_no_answer(){
+    const int c = get_first_char_in_line();
+    return c == 'y' || c == 'Y';
 }
 
 int show(const char* what, int iwhat, int skip_questions){
@@ -692,7 +716,7 @@ int show(const char* what, int iwhat, int skip_questions){
                 int draw_tile = 1;
                 if(!skip_questions){
                     printf("do you wish to draw the tile[y/n]?\n");
-                    draw_tile = get_yes_or_no_asnwer();
+                    draw_tile = get_yes_or_no_answer();
                 }
                 if(draw_tile){
                     const int toffset = tiley * tileset_tileh * tilesetx + tilex * tileset_tilew;
@@ -793,7 +817,7 @@ int show(const char* what, int iwhat, int skip_questions){
         int draw_tileset = 0;
         if(!skip_questions &&  tileset != NULL){
             printf("do you wish to draw the tilesheet[y/n]?\n");
-            draw_tileset = get_yes_or_no_asnwer();
+            draw_tileset = get_yes_or_no_answer();
         }
         if(draw_tileset){
             const int tileset_tilexcount = tilesetx / tileset_tilew;
@@ -823,7 +847,8 @@ int show(const char* what, int iwhat, int skip_questions){
         int draw_tileset = 0;
         if(!skip_questions){
             printf("do you wish to draw the tileset[y/n]?\n");
-            draw_tileset = get_yes_or_no_asnwer();
+            draw_tileset = get_first_char_in_line();
+            draw_tileset = draw_tileset == 'y' || draw_tileset == 'Y';
         }
         if(draw_tileset){
             printf("  ");
@@ -982,6 +1007,123 @@ int perform_pattern_word(const char* pattern_word){
     }
 
     return 0;
+}
+
+// \returns the number of replacements performed, if only searched then the number of matched tiles
+static int query(int old, int _new, int query){
+
+    int count = 0;
+
+    if(_new < 0)
+        _new = old;
+
+    if(!query){
+
+        for(int l = 0; l < layers; l+=1){
+            for(int i = 0; i < maph; i+=1){
+                for(int j = 0; j < mapw; j+=1){
+                    if(map[l][i * mapw + j] == old){
+                        map[l][i * mapw + j] = _new;
+                        count += 1;
+                    }
+                }
+            }
+        }
+
+        return count;
+
+    }
+
+    printf(
+        "enter l to only search current layer, d to only search inside the display view,\n"
+        "D to search inside the display view through all layers, s to only search the current copy selection or\n"
+        "S search the current copy selection through all layers. Otherwise a global search will be performed.\n"
+    );
+    
+    const int __response = get_first_char_in_line();
+
+    int l0 = 0;
+    int i0 = 0;
+    int j0 = 0;
+    int lr = layers;
+    int ir = maph;
+    int jr = mapw;
+
+    switch (__response)
+    {
+    case 'd':
+        l0 = current_layer;
+        lr = current_layer + 1;
+    case 'D':
+        i0 = cameray;
+        ir = cameray + camerah;
+        j0 = camerax;
+        jr = camerax + cameraw;
+        break;
+    case 'l':
+        l0 = current_layer;
+        lr = current_layer + 1;
+        break;
+    case 's':
+        l0 = current_layer;
+        lr = current_layer + 1;
+    case 'S':
+        if(copyy < 0 || copyx < 0){
+            fprintf(stderr, "[ERROR] no active selection\n");
+            return -1;
+        }
+        i0 = copyy;
+        ir = i0 + pencilh;
+        j0 = copyx;
+        jr = j0 + pencilw;
+        break;
+    default:
+        break;
+    }
+
+    for(int l = l0; l < lr && l < layers; l+=1){
+        for(int i = i0; i < ir && i < maph; i+=1){
+            for(int j = j0; j < jr && j < mapw; j+=1){
+                if(map[l][i * mapw + j] == old){
+                    if(!query){
+                        map[l][i * mapw + j] = _new;
+                        count += 1;
+                        continue;
+                    }
+                    current_layer = l;
+                    camerax = cramp(j - cameraw / 2, mapw, 0);
+                    cameray = cramp(i - camerah / 2, maph, 0);
+                    display(0);
+                    if(_new != old) printf(
+                        "replace tile %i at layer %i (%i, %i) for %i?\n"
+                        "(n or s to skip, q to quit query, a to replace all from here, otherwise replace it)\n",
+                        map[l][i * mapw + j], l, i, j, _new
+                    );
+                    else printf(
+                        "enter q to quit query, a to query all from here, otherwise continue query\n"
+                        "found queried tile %i at layer %i (%i, %i)\n",
+                        old, l, i, j
+                    );
+                    const int response = get_first_char_in_line();
+                    switch (response)
+                    {
+                    case 'q':
+                        return count;
+                    case 'a':
+                        query = 0;
+                    default:
+                        map[l][i * mapw + j] = _new;
+                        count += 1;
+                    case 'n':
+                    case 's':
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return count;
 }
 
 int handle_prompt(int argc, const char** argv){
@@ -1265,6 +1407,26 @@ int handle_prompt(int argc, const char** argv){
         display(0);
     }
         return 0;
+    case INST_MERGELAYERS:{
+        PROMPT_EXPECT_ARGC(2);
+        GET_UINT(first, argv, 1);
+        GET_UINT(second, argv, 2);
+        if(first >= layers || second >= layers){
+            fprintf(stderr, "[ERROR] layers only go up to %i, got %i and %i\n", layers - 1, first, second);
+            return 1;
+        }
+
+        for(int i = 0; i < maph; i+=1){
+            for(int j = 0; j < mapw; j+=1){
+                const int f = map[first][i * mapw + j];
+                const int s = map[second][i * mapw + j];
+                map[second][i * mapw + j] = (f < s)? s : f;
+            }
+        }
+        current_layer = second;
+        display(0);
+    }
+        return 0;
     case INST_LAYER:{
         PROMPT_EXPECT_ARGC(1);
         GET_UINT(layer, argv, 1);
@@ -1346,6 +1508,49 @@ int handle_prompt(int argc, const char** argv){
             return 1;
         }
         display(0);
+    }
+        return 0;
+    
+    case INST_QUERY:{
+        if(argc < 2){
+            fprintf(stderr, "[ERROR] expected at least one argument, queried tile, got %i instead\n", argc - 1);
+            return 1;
+        }
+        int _query = 0;
+        int old = -1;
+        int _new = -1;
+        int targc = 0;
+        for(int i = 1; i < argc; i++){
+            if(cmp_str(argv[i], "-q")){
+                _query = 1;
+                continue;;
+            }
+            GET_UINT(tile_number, argv, i);
+            if(old >= 0){
+                _new = tile_number;
+            }
+            else{
+                old = tile_number;
+            }
+            targc += 1;
+        }
+        if(targc > 2){
+            fprintf(stderr, "[ERROR] expected at most two nonflag arguments, old and new tile, got %i instead\n", targc);
+            return 1;
+        }
+        if(old < 0){
+            fprintf(stderr, "[ERROR] expected valid queried tile\n");
+            return 1;
+        }
+        const int count = query(old, _new, _query);
+        if(count < 0){
+            fprintf(stderr, "[ERROR] query failed\n");
+            return 1;
+        }
+        if(count == 0)
+            return 0;
+        display(0);
+        printf("query hit %i times\n", count);
     }
         return 0;
     case INST_HELP:

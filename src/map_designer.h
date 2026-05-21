@@ -319,7 +319,7 @@ int save_map(const char* path){
                     output[(i * mapw + j) * layers + k] = 0;
             }
         }
-        if(stbi_write_png(path, mapw, maph, layers, map, mapw * layers)){
+        if(!stbi_write_png(path, mapw, maph, layers, map, mapw * layers)){
             fprintf(stderr, "[ERROR] could not save map to '%s' as png\n", path);
             free(output);
             return 1;

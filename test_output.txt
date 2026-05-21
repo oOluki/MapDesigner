@@ -306,8 +306,11 @@ draw mode: character
 -holds <symbol>: holds the tile with given symbol
     this command is equivalent to h
 
--place <x> <y>: places a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
+-place <x> <y>: fills a square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
     this command is equivalent to p
+
+-hollow <x> <y>: places a hollow square of held tiles at (x, y) with pencil's width and height (check pencil instruction)
+    this command is equivalent to P
 
 -pencil <w> <h>: sets the width and height of the square for tile placement/copying
     this command is equivalent to @

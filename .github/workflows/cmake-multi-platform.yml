@@ -61,28 +61,6 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Install SDL2 dependencies (Ubuntu)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libsdl2-dev
-  
-      # Conditionally install SDL2 dependencies for macOS
-    - name: Install SDL2 dependencies (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        brew install sdl2
-
-  
-      # Conditionally install SDL2 dependencies for Windows
-    - name: Install SDL2 dependencies (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
-        ./bootstrap-vcpkg.bat
-        vcpkg install sdl2
-
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
       run: >

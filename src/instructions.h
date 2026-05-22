@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2025 oOluki
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
@@ -213,6 +237,9 @@ int show(const char* what, int iwhat, int skip_questions){
                 (iwhat >= 0 && iwhat < palette_len)? "" : "no symbol",
                 (iwhat >= 0 && iwhat < palette_len)? palette[iwhat] : ' '
             );
+            if(is_tile_mapped(iwhat)){
+                printf("\ttile %i maps to %i\n", iwhat, get_real_tile(iwhat));
+            }
             if(tileset){
                 if(iwhat <= 0) return 0;
                 const int tilex = ((iwhat - 1) % (tilesetx / tileset_tilew));
@@ -222,12 +249,12 @@ int show(const char* what, int iwhat, int skip_questions){
                     return 0;
                 }
                 printf("\tposition in tilesheet (y, x) = (%i, %i)\n", tiley, tilex);
-                int draw_tile = 1;
+                int draw_tile = 'n';
                 if(!skip_questions){
-                    printf("do you wish to draw the tile[y/n]?\n");
-                    draw_tile = get_yes_or_no_answer();
+                    printf("do you wish to draw the tile [y to draw with colors, a to draw in raw ascii, n to cancel]?\n");
+                    draw_tile = get_first_char_in_line();
                 }
-                if(draw_tile){
+                if(draw_tile == 'y' || draw_tile == 'a'){
                     const int toffset = tiley * tileset_tileh * tilesetx + tilex * tileset_tilew;
                     for(int i = 0; i < tileset_tileh; i+=1){
                         for(int j = 0; j < tileset_tilew; j+=1){
@@ -235,7 +262,10 @@ int show(const char* what, int iwhat, int skip_questions){
                             for(int channel = 0; channel < tileset_comp; channel+=1){
                                 color |= (tileset[(toffset + i * tilesetx + j) * tileset_comp + channel]) << (channel * 8);
                             }
-                            printf("%c", ascii_map[getascii_color_index(color)]);
+                            if(draw_tile == 'y')
+                                put_color_char(color);
+                            else
+                                printf("%c", ascii_map[getascii_color_index(color)]);
                         }
                         printf("\n");
                     }
@@ -355,26 +385,6 @@ int show(const char* what, int iwhat, int skip_questions){
         printf("held tile %i -> %c\n", held_tile, (held_tile >= 0 && held_tile < palette_len)? palette[held_tile] : '~');
         if(is_tile_mapped(held_tile)){
             printf("tile %i maps to %i\n", held_tile, get_real_tile(held_tile));
-        }
-        if(!skip_questions && tileset != NULL){
-            printf("do you wish to draw the tile graphical representation[y/n]?\n");
-            const int response = get_first_char_in_line();
-            if(response != 'y' && response != 'Y')
-                return 0;
-            
-            uint32_t* pixels = (uint32_t*) malloc(tileset_tilew * tileset_tileh * sizeof(pixels[0]));
-
-            render_tile_graphical(held_tile, 0, 0, pixels, tileset_tilew, tileset_tileh, tileset_tilew);
-
-            for(int i = 0; i < tileset_tileh; i+=1){
-                printf("  ");
-                for(int j = 0; j < tileset_tilew; j+=1){
-                    put_color_char(pixels[i * tileset_tilew + j]);
-                }
-                putchar('\n');
-            }
-
-            free(pixels);
         }
         return 0;
     }

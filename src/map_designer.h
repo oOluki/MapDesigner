@@ -28,6 +28,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -72,7 +73,7 @@ static char* palette = DEFAULT_PALETTE;
 
 static int palette_len = (sizeof(DEFAULT_PALETTE) - sizeof(DEFAULT_PALETTE[0])) / sizeof(DEFAULT_PALETTE[0]);
 
-#define DEFAULT_ASCII "@#&$Xx%!*+=;:~-. "
+#define DEFAULT_ASCII " .-~:;=+*!%xX$&#@"
 
 static const char* ascii_map = DEFAULT_ASCII;
 static int         ascii_len = sizeof(DEFAULT_ASCII) - sizeof(char);
@@ -562,7 +563,7 @@ static inline void* align_buff_to(int n){
 }
 
 static inline int getascii_alpha_index(uint8_t alpha){
-    return (ascii_len - 1) - ((alpha * (ascii_len - 1)) / 255); 
+    return (alpha * (ascii_len - 1)) / 255; 
 }
 
 static int getascii_color_index(uint32_t color){
@@ -580,7 +581,7 @@ static int getascii_color_index(uint32_t color){
 
     const uint32_t brightness = (rw * r + gw * g + bw * b) / (rw + gw + bw);
 
-    return (brightness <= 255)? (ascii_len - 1) - ((brightness * (ascii_len - 1)) / 255) : 0;
+    return (brightness <= 255)? (brightness * (ascii_len - 1)) / 255 : (ascii_len - 1);
 }
 
 static void print_map(int draw_interssections){
@@ -700,41 +701,42 @@ static inline uint32_t blend_colors(const uint32_t ct, const uint32_t cb){
     return (ro << 0) | (go << 8) | (bo << 16) | (ab << 24);
 }
 
+static inline const char* get_color_string(uint32_t foregroung_color, uint32_t background_color){
+    static char buff[64];
+
+    const uint8_t fr = (foregroung_color >>  0) & 0xFF;
+    const uint8_t fg = (foregroung_color >>  8) & 0xFF;
+    const uint8_t fb = (foregroung_color >> 16) & 0xFF;
+    const uint8_t fa = (foregroung_color >> 24) & 0xFF;
+
+
+    const uint8_t br = (background_color >>  0) & 0xFF;
+    const uint8_t bg = (background_color >>  8) & 0xFF;
+    const uint8_t bb = (background_color >> 16) & 0xFF;
+    const uint8_t ba = (background_color >> 24) & 0xFF;
+
+    sprintf(
+        buff,
+        "\x1b[38;2;%" PRIu8 ";%" PRIu8 ";%" PRIu8 "m"
+        "\x1b[48;2;%" PRIu8 ";%" PRIu8 ";%" PRIu8 "m",
+        fr, fg, fb,
+        br, bg, bb
+    );
+
+    return buff;
+}
+
 static void put_color_char(uint32_t color){
 
-    static char _str[] = {
-        '\x1b', '[', '3', '8', ';', '2', ';',
-        'r', 'r', 'r', ';', 'g', 'g', 'g', ';', 'b', 'b', 'b', 'm', 'c', '\0'
-    };
-
-    const uint8_t r = (color >>  0) & 0xFF;
-    const uint8_t g = (color >>  8) & 0xFF;
-    const uint8_t b = (color >> 16) & 0xFF;
     const uint8_t a = (color >> 24) & 0xFF;
 
-    const char c = '@';//ascii_map[getascii_alpha_index(a)];
+    const char c = ascii_map[getascii_alpha_index(a)];
 
-    _str[7] = (r / 100) + '0';
-    _str[8] = ((r / 10) & 9) + '0';
-    _str[9] = (r & 9) + '0';
-
-    _str[11] = (g / 100) + '0';
-    _str[12] = ((g / 10) & 9) + '0';
-    _str[13] = (g & 9) + '0';
-
-    _str[15] = (b / 100) + '0';
-    _str[16] = ((b / 10) & 9) + '0';
-    _str[17] = (b & 9) + '0';
-
-    _str[19] = c;
-
-
-    printf("%s\x1b[0m", _str);
-    //printf("\x1b[38;2;255;128;0mOrange\x1b[0m\n");
+    printf("%s%c\x1b[0m", get_color_string(color, (a == 255)? color : 0x0), (a == 255)? ' ' : c);
 }
 
 static void render_tile_graphical(int tile, int x, int y, uint32_t* pixels, int pixelsw, int pixelsh, int pixels_stride){
-    if(!pixels || !tileset || tile == 0) return;
+    if(!pixels || !tileset) return;
     
     const int y0 = (y < 0)? 0 : y;
     const int x0 = (x < 0)? 0 : x;

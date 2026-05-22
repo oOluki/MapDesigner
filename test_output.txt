@@ -262,7 +262,7 @@ cursor: (20, 20)
 output: stdout
 tilesheet = (null)
 tilew = 0, tileh = 0
-ascii: @#&$Xx%!*+=;:~-. 
+ascii:  .-~:;=+*!%xX$&#@
 draw mode: character
 >>> [2J[H
        0  1  2  3  4  5  6  7  8  9

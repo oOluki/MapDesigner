@@ -86,5 +86,5 @@ jobs:
       run: |
         dir ${{ github.workspace }}
         dir ${{ steps.strings.outputs.build-output-dir }}
-        dir ${{ steps.strings.outputs.build-output-dir }}/Debug
-        python test.py ${{ steps.strings.outputs.build-output-dir }}/Debug/MapDesigner ${{ github.workspace }}/test_input.txt ${{ github.workspace }}/test_output.txt ${{ github.workspace }}/test_map.txt
+        dir ${{ steps.strings.outputs.build-output-dir }}/Release
+        python test.py ${{ steps.strings.outputs.build-output-dir }}/Release/MapDesigner ${{ github.workspace }}/test_input.txt ${{ github.workspace }}/test_output.txt ${{ github.workspace }}/test_map.txt

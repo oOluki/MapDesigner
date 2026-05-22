@@ -39,7 +39,7 @@ if(not cmpf("tmp.txt", OUTPUT, "rb")):
     print("test does not output as expected")
     exit(1)
 
-if(not cmpf("dummymap.txt", MAP, "rb")):
+if(not cmpf("dummymap.txt", MAP, "r")):
     print("test does not generate expected map")
     exit(1)
 

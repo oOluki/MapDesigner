@@ -238,7 +238,9 @@ int show(const char* what, int iwhat, int skip_questions){
                 (iwhat >= 0 && iwhat < palette_len)? palette[iwhat] : ' '
             );
             if(is_tile_mapped(iwhat)){
-                printf("\ttile %i maps to %i\n", iwhat, get_real_tile(iwhat));
+                const TILE real_tile = get_real_tile(iwhat);
+                printf("\ttile %i maps to %i\n", iwhat, real_tile);
+                iwhat = real_tile;
             }
             if(tileset){
                 if(iwhat <= 0) return 0;
